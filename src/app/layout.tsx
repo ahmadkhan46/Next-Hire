@@ -13,13 +13,22 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const appShell = (
+    <>
+      <PublicNavigation />
+      <Providers>{children}</Providers>
+    </>
+  );
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
-        <ClerkProvider>
-          <PublicNavigation />
-          <Providers>{children}</Providers>
-        </ClerkProvider>
+        {clerkPublishableKey ? (
+          <ClerkProvider publishableKey={clerkPublishableKey}>{appShell}</ClerkProvider>
+        ) : (
+          appShell
+        )}
       </body>
     </html>
   );
