@@ -1,0 +1,30 @@
+# Default owner for all files.
+* @AhmadKhan46
+
+# Platform and CI
+/.github/ @AhmadKhan46
+/package.json @AhmadKhan46
+/package-lock.json @AhmadKhan46
+/tsconfig.json @AhmadKhan46
+/next.config.ts @AhmadKhan46
+
+# Database and migrations
+/prisma/ @AhmadKhan46
+/scripts/ @AhmadKhan46
+
+# API and backend logic
+/src/app/api/ @AhmadKhan46
+/src/lib/ @AhmadKhan46
+/src/workers/ @AhmadKhan46
+
+# Frontend app and components
+/src/app/ @AhmadKhan46
+/src/components/ @AhmadKhan46
+
+# Tests
+/src/__tests__/ @AhmadKhan46
+/tests/ @AhmadKhan46
+
+# Documentation and templates
+/documents/ @AhmadKhan46
+/templates/ @AhmadKhan46
