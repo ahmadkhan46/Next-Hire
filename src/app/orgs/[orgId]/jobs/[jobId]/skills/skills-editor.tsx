@@ -9,6 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { Plus, Trash2, Save, Sparkles, AlertTriangle } from "lucide-react";
 
@@ -24,6 +32,18 @@ type SkillSuggestion = {
   source: "org" | "taxonomy";
 };
 
+type GeneratePreview = {
+  wouldChange: boolean;
+  reason?: string;
+  existingCount: number;
+  generatedCount: number;
+  newSkills: Array<{ name: string; weight: number }>;
+  weightUpdates: Array<{ name: string; from: number; to: number }>;
+  unchangedCount: number;
+};
+
+type PreviewWeightUpdate = GeneratePreview["weightUpdates"][number];
+
 function clampWeight(n: unknown) {
   const x = typeof n === "number" ? n : Number(n);
   if (!Number.isFinite(x)) return 1;
@@ -36,6 +56,17 @@ function cleanName(s: unknown) {
 
 function isCritical(w: number) {
   return w >= 4;
+}
+
+function isRiskyNewWeight(weight: number) {
+  return weight >= 4;
+}
+
+function weightUpdateRisk(change: PreviewWeightUpdate) {
+  if (change.to >= 4 && change.from < 4) return 3;
+  if (change.to >= 4) return 2;
+  if (change.to > change.from) return 1;
+  return 0;
 }
 
 async function getJSON<T>(url: string): Promise<T> {
@@ -72,6 +103,10 @@ export function JobSkillsEditor({
   const [rerunning, setRerunning] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
+  const [preparingPreview, setPreparingPreview] = React.useState(false);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [preview, setPreview] = React.useState<GeneratePreview | null>(null);
+  const [diffMode, setDiffMode] = React.useState(true);
 
   // Keep an original snapshot to detect dirty state.
   const original = React.useMemo(() => {
@@ -96,6 +131,37 @@ export function JobSkillsEditor({
     const critical = rows.filter((r) => isCritical(r.weight)).length;
     return { total, critical };
   }, [rows]);
+
+  const previewNewSkills = React.useMemo(() => {
+    if (!preview) return [];
+    const list = [...preview.newSkills];
+    if (!diffMode) return list;
+
+    list.sort((a, b) => {
+      const riskDelta =
+        Number(isRiskyNewWeight(b.weight)) - Number(isRiskyNewWeight(a.weight));
+      if (riskDelta !== 0) return riskDelta;
+      if (b.weight !== a.weight) return b.weight - a.weight;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }, [preview, diffMode]);
+
+  const previewWeightUpdates = React.useMemo(() => {
+    if (!preview) return [];
+    const list = [...preview.weightUpdates];
+    if (!diffMode) return list;
+
+    list.sort((a, b) => {
+      const riskDelta = weightUpdateRisk(b) - weightUpdateRisk(a);
+      if (riskDelta !== 0) return riskDelta;
+      const magnitudeDelta = Math.abs(b.to - b.from) - Math.abs(a.to - a.from);
+      if (magnitudeDelta !== 0) return magnitudeDelta;
+      if (b.to !== a.to) return b.to - a.to;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }, [preview, diffMode]);
 
   function addSkillInline(name: string, weight: number) {
     const n = cleanName(name);
@@ -211,15 +277,7 @@ export function JobSkillsEditor({
     }
   }
 
-  async function generateFromDescription() {
-    if (rows.length > 0) {
-      const confirmed = window.confirm(
-        `This job already has ${rows.length} skill${rows.length === 1 ? "" : "s"}. ` +
-          "If you continue, generated skills may update weights for overlapping skills. Continue?"
-      );
-      if (!confirmed) return;
-    }
-
+  async function applyGeneratedSkills() {
     setGenerating(true);
     try {
       const res = await fetch(`/api/jobs/${jobId}/skills/generate`, {
@@ -243,6 +301,30 @@ export function JobSkillsEditor({
       toast.error(e?.message ?? "Generate failed");
     } finally {
       setGenerating(false);
+      setPreviewOpen(false);
+      setPreview(null);
+    }
+  }
+
+  async function openGeneratePreview() {
+    setPreparingPreview(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/skills/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ onlyWhenEmpty: false, maxSkills: 15, preview: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to prepare generation preview");
+
+      const nextPreview = data?.preview as GeneratePreview | undefined;
+      if (!nextPreview) throw new Error("Invalid generation preview response");
+      setPreview(nextPreview);
+      setPreviewOpen(true);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not prepare preview");
+    } finally {
+      setPreparingPreview(false);
     }
   }
 
@@ -303,12 +385,12 @@ export function JobSkillsEditor({
             <Button
               variant="outline"
               className="rounded-2xl"
-              onClick={generateFromDescription}
-              disabled={generating || saving || refreshing || rerunning}
+              onClick={openGeneratePreview}
+              disabled={preparingPreview || generating || saving || refreshing || rerunning}
               title="Generate skills from job description"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              {generating ? "Generating..." : "Generate from description"}
+              {preparingPreview ? "Preparing..." : generating ? "Generating..." : "Generate from description"}
             </Button>
 
             <Button
@@ -537,6 +619,142 @@ export function JobSkillsEditor({
           </div>
         </div>
       </Card>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-xl rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Generate Skills From Description</DialogTitle>
+            <DialogDescription>
+              Review changes before applying generated skills.
+            </DialogDescription>
+          </DialogHeader>
+
+          {preview ? (
+            <div className="space-y-4">
+              {preview.reason ? (
+                <div className="rounded-2xl border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  {preview.reason}
+                </div>
+              ) : null}
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-2xl border bg-muted/30 p-3 text-sm">
+                  <div className="text-muted-foreground">New skills</div>
+                  <div className="text-lg font-semibold">{preview.newSkills.length}</div>
+                </div>
+                <div className="rounded-2xl border bg-muted/30 p-3 text-sm">
+                  <div className="text-muted-foreground">Weight updates</div>
+                  <div className="text-lg font-semibold">{preview.weightUpdates.length}</div>
+                </div>
+                <div className="rounded-2xl border bg-muted/30 p-3 text-sm">
+                  <div className="text-muted-foreground">Unchanged</div>
+                  <div className="text-lg font-semibold">{preview.unchangedCount}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-2xl border bg-muted/20 px-3 py-2">
+                <div className="text-xs text-muted-foreground">
+                  Diff mode: critical changes (W4/W5) are highlighted and sorted first.
+                </div>
+                <Button
+                  type="button"
+                  variant={diffMode ? "default" : "outline"}
+                  className="h-8 rounded-xl px-3 text-xs"
+                  onClick={() => setDiffMode((v) => !v)}
+                >
+                  {diffMode ? "Diff mode: On" : "Diff mode: Off"}
+                </Button>
+              </div>
+
+              {previewNewSkills.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">New skills to add</div>
+                  <div className="rounded-2xl border bg-muted/20 p-3 text-sm">
+                    <div className="mb-2 grid grid-cols-[1fr_auto] gap-2 border-b pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <span>Skills</span>
+                      <span>Weight</span>
+                    </div>
+                    <div className="max-h-56 overflow-y-auto pr-1">
+                      {previewNewSkills.map((s) => {
+                        const risky = diffMode && isRiskyNewWeight(s.weight);
+                        return (
+                        <div
+                          key={s.name}
+                          className={`grid grid-cols-[1fr_auto] items-center gap-2 rounded-md px-1 py-1 ${
+                            risky ? "bg-red-50 text-red-700" : ""
+                          }`}
+                        >
+                          <span>{s.name}</span>
+                          <span className={risky ? "text-red-700" : "text-muted-foreground"}>
+                            W{s.weight}
+                          </span>
+                        </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {previewWeightUpdates.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Weight changes</div>
+                  <div className="rounded-2xl border bg-muted/20 p-3 text-sm">
+                    <div className="mb-2 grid grid-cols-[1fr_auto] gap-2 border-b pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <span>Skills</span>
+                      <span>Weight</span>
+                    </div>
+                    <div className="max-h-56 overflow-y-auto pr-1">
+                      {previewWeightUpdates.map((s) => {
+                        const risky = diffMode && s.to >= 4;
+                        return (
+                        <div
+                          key={s.name}
+                          className={`grid grid-cols-[1fr_auto] items-center gap-2 rounded-md px-1 py-1 ${
+                            risky ? "bg-red-50 text-red-700" : ""
+                          }`}
+                        >
+                          <span>{s.name}</span>
+                          <span className={risky ? "text-red-700" : "text-muted-foreground"}>
+                            W{s.from} -&gt; W{s.to}
+                          </span>
+                        </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {!preview.wouldChange ? (
+                <div className="rounded-2xl border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  No changes will be applied.
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl"
+              onClick={() => setPreviewOpen(false)}
+              disabled={generating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-2xl"
+              onClick={applyGeneratedSkills}
+              disabled={generating || !preview || !preview.wouldChange}
+            >
+              {generating ? "Generating..." : "Proceed"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -6,7 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { handleAPIError } from "@/lib/errors";
 import { verifyResourceAccess } from "@/lib/api-middleware";
 import { enforcePermission } from "@/lib/rbac";
-import { autoGenerateAndPersistJobSkills } from "@/lib/job-skill-generation";
+import {
+  autoGenerateAndPersistJobSkills,
+  suggestJobSkillsFromDescription,
+} from "@/lib/job-skill-generation";
 import { logJobPageAudit } from "@/lib/job-page-audit";
 
 type Context = { params: Promise<{ jobId: string }> };
@@ -28,6 +31,7 @@ export async function POST(req: Request, context: Context) {
         ? undefined
         : Number(body.maxSkills);
     const onlyWhenEmpty = Boolean(body?.onlyWhenEmpty);
+    const previewOnly = Boolean(body?.preview);
 
     const job = await prisma.job.findUnique({
       where: { id: jobId },
@@ -43,6 +47,73 @@ export async function POST(req: Request, context: Context) {
         { error: "Job description is required to generate skills" },
         { status: 400 }
       );
+    }
+
+    const existingRows = await prisma.jobSkill.findMany({
+      where: { jobId },
+      include: { skill: true },
+      orderBy: [{ weight: "desc" }, { createdAt: "asc" }],
+    });
+
+    const existingSkills = existingRows.map((row) => ({
+      name: row.skill.name,
+      weight: row.weight ?? 1,
+    }));
+
+    if (previewOnly) {
+      if (onlyWhenEmpty && existingSkills.length > 0) {
+        return NextResponse.json({
+          ok: true,
+          jobId,
+          preview: {
+            wouldChange: false,
+            reason: "Skipped because onlyWhenEmpty=true and job already has skills",
+            existingCount: existingSkills.length,
+            generatedCount: 0,
+            newSkills: [] as Array<{ name: string; weight: number }>,
+            weightUpdates: [] as Array<{ name: string; from: number; to: number }>,
+            unchangedCount: 0,
+          },
+        });
+      }
+
+      const generated = suggestJobSkillsFromDescription(job.description, {
+        maxSkills: Number.isFinite(maxSkillsRaw) ? maxSkillsRaw : undefined,
+      });
+
+      const existingMap = new Map(
+        existingSkills.map((item) => [item.name.toLowerCase(), item])
+      );
+      const newSkills = generated.filter(
+        (item) => !existingMap.has(item.name.toLowerCase())
+      );
+      const weightUpdates = generated
+        .filter((item) => {
+          const existing = existingMap.get(item.name.toLowerCase());
+          return existing && existing.weight !== item.weight;
+        })
+        .map((item) => ({
+          name: item.name,
+          from: existingMap.get(item.name.toLowerCase())?.weight ?? 1,
+          to: item.weight,
+        }));
+      const unchangedCount = generated.filter((item) => {
+        const existing = existingMap.get(item.name.toLowerCase());
+        return existing && existing.weight === item.weight;
+      }).length;
+
+      return NextResponse.json({
+        ok: true,
+        jobId,
+        preview: {
+          wouldChange: newSkills.length > 0 || weightUpdates.length > 0,
+          existingCount: existingSkills.length,
+          generatedCount: generated.length,
+          newSkills,
+          weightUpdates,
+          unchangedCount,
+        },
+      });
     }
 
     const result = await autoGenerateAndPersistJobSkills({

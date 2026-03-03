@@ -2,18 +2,22 @@ import OpenAI from 'openai';
 import { LLMError } from './errors';
 import { trackLLMUsage } from './llm-tracking';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 const EMBEDDING_MODEL = 'text-embedding-3-small'; // Cheaper, faster
 // const EMBEDDING_MODEL = 'text-embedding-3-large'; // Better quality
+
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new LLMError('OPENAI_API_KEY not configured', 'openai', EMBEDDING_MODEL);
+  }
+  return new OpenAI({ apiKey });
+}
 
 export async function generateEmbedding(
   text: string,
   orgId?: string
 ): Promise<{ embedding: number[]; tokens: number; cost: number }> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new LLMError('OPENAI_API_KEY not configured', 'openai', EMBEDDING_MODEL);
-  }
+  const openai = getOpenAIClient();
 
   const startTime = Date.now();
 
