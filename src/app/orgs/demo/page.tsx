@@ -2,7 +2,6 @@
 
 import { ArrowUpRight, Briefcase, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -19,12 +18,11 @@ const demoJobs = [
 ];
 
 export default function DemoOrgDashboard() {
-  const { user } = useUser();
   const router = useRouter();
   const [orgHref, setOrgHref] = useState<string | null>(null);
+  const [hasOrg, setHasOrg] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
     let active = true;
     fetch("/api/orgs/my")
       .then((res) => (res.ok ? res.json() : null))
@@ -33,16 +31,20 @@ export default function DemoOrgDashboard() {
         const orgId = data?.orgId as string | undefined;
         const href = orgId ? `/orgs/${orgId}` : "/";
         setOrgHref(href);
-        if (orgId) router.replace(href);
+        setHasOrg(Boolean(orgId));
+        if (orgId) {
+          router.replace(href);
+        }
       })
       .catch(() => {
         if (!active) return;
         setOrgHref("/");
+        setHasOrg(false);
       });
     return () => {
       active = false;
     };
-  }, [router, user]);
+  }, [router]);
 
   return (
     <div className="min-h-screen">
@@ -61,7 +63,7 @@ export default function DemoOrgDashboard() {
                 Sign in to unlock live data and automation.
               </p>
             </div>
-            {user ? (
+            {hasOrg ? (
               <Link
                 href={orgHref ?? "/"}
                 className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white inline-flex items-center"

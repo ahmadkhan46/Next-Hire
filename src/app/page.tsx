@@ -5,16 +5,22 @@ import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 export default async function HomePage() {
-  const user = await currentUser();
-  
-  let userOrgId = null;
-  if (user) {
-    const membership = await prisma.membership.findFirst({
-      where: { userId: user.id },
-      select: { orgId: true },
-    });
-    userOrgId = membership?.orgId || null;
+  const clerkEnabled = /^pk_(test|live)_/.test(
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
+  );
+
+  let userOrgId: string | null = null;
+  if (clerkEnabled) {
+    const user = await currentUser();
+    if (user) {
+      const membership = await prisma.membership.findFirst({
+        where: { userId: user.id },
+        select: { orgId: true },
+      });
+      userOrgId = membership?.orgId || null;
+    }
   }
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="prestige-bg" />
@@ -40,6 +46,7 @@ export default async function HomePage() {
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+              {clerkEnabled ? (
               <SignedOut>
                 <Link
                   href="/sign-up"
@@ -54,6 +61,23 @@ export default async function HomePage() {
                   Sign In
                 </Link>
               </SignedOut>
+              ) : (
+                <>
+                  <Link
+                    href="/sign-up"
+                    className="prestige-accent rounded-2xl px-8 py-4 text-base font-semibold shadow-lg inline-flex items-center gap-2"
+                  >
+                    Get Started Free <ArrowRight className="h-5 w-5" />
+                  </Link>
+                  <Link
+                    href="/sign-in"
+                    className="rounded-2xl px-8 py-4 text-base font-semibold prestige-stroke text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                </>
+              )}
+              {clerkEnabled ? (
               <SignedIn>
                 <Link
                   href={userOrgId ? `/orgs/${userOrgId}` : "/orgs/demo-org"}
@@ -62,6 +86,7 @@ export default async function HomePage() {
                   Go to workspace <ArrowRight className="h-5 w-5" />
                 </Link>
               </SignedIn>
+              ) : null}
             </div>
           </div>
         </div>
