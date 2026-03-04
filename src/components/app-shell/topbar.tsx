@@ -18,6 +18,7 @@ import { SignedOut } from "@clerk/nextjs";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CommandPalette } from "@/components/command-palette";
+import { isClerkClientEnabled } from "@/lib/clerk-config";
 
 type SearchResults = {
   candidates: Array<{ id: string; name: string; email: string }>;
@@ -34,9 +35,7 @@ const NotificationBell = dynamic(
 );
 
 export function Topbar({ orgId }: { orgId: string }) {
-  const clerkEnabled = /^pk_(test|live)_/.test(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
-  );
+  const clerkEnabled = isClerkClientEnabled();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);

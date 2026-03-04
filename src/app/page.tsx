@@ -1,25 +1,10 @@
 import Link from "next/link";
 import { Sparkles, Zap, Shield, BarChart3, ArrowRight } from "lucide-react";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { isClerkClientEnabled } from "@/lib/clerk-config";
 
 export default async function HomePage() {
-  const clerkEnabled = /^pk_(test|live)_/.test(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
-  );
-
-  let userOrgId: string | null = null;
-  if (clerkEnabled) {
-    const user = await currentUser();
-    if (user) {
-      const membership = await prisma.membership.findFirst({
-        where: { userId: user.id },
-        select: { orgId: true },
-      });
-      userOrgId = membership?.orgId || null;
-    }
-  }
+  const clerkEnabled = isClerkClientEnabled();
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -80,7 +65,7 @@ export default async function HomePage() {
               {clerkEnabled ? (
               <SignedIn>
                 <Link
-                  href={userOrgId ? `/orgs/${userOrgId}` : "/orgs/demo-org"}
+                  href="/orgs/demo"
                   className="prestige-accent rounded-2xl px-8 py-4 text-base font-semibold shadow-lg inline-flex items-center gap-2"
                 >
                   Go to workspace <ArrowRight className="h-5 w-5" />
