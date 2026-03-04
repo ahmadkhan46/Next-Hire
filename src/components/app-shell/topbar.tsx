@@ -34,6 +34,9 @@ const NotificationBell = dynamic(
 );
 
 export function Topbar({ orgId }: { orgId: string }) {
+  const clerkEnabled = /^pk_(test|live)_/.test(
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""
+  );
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -273,14 +276,23 @@ export function Topbar({ orgId }: { orgId: string }) {
 
         <NotificationBell orgId={orgId} />
 
-        <SignedOut>
+        {clerkEnabled ? (
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="ml-1 inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] hover:bg-slate-100"
+            >
+              Sign in
+            </Link>
+          </SignedOut>
+        ) : (
           <Link
             href="/sign-in"
             className="ml-1 inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] hover:bg-slate-100"
           >
             Sign in
           </Link>
-        </SignedOut>
+        )}
       </div>
     </header>
   );
