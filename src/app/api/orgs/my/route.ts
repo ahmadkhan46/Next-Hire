@@ -1,8 +1,24 @@
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { isClerkServerEnabled } from "@/lib/clerk-config";
 
 export async function GET() {
+  if (!isClerkServerEnabled()) {
+    return NextResponse.json(
+      { error: "Server auth not configured", hint: "Set matching NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY in Vercel." },
+      { status: 503 }
+    );
+  }
+
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json(
+      { error: "Database not configured", hint: "Set DATABASE_URL in Vercel environment variables." },
+      { status: 503 }
+    );
+  }
+
   try {
     const authResult = await auth();
     const userId = authResult.userId;
@@ -60,6 +76,21 @@ export async function GET() {
     return NextResponse.json({ orgId: membership.orgId });
   } catch (error) {
     console.error("GET /api/orgs/my failed", error);
+
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      return NextResponse.json(
+        { error: "Database connection failed", hint: "Check DATABASE_URL and DB network allowlist for Vercel." },
+        { status: 503 }
+      );
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return NextResponse.json(
+        { error: "Database query failed", code: error.code, hint: "Run production migrations: npx prisma migrate deploy." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
