@@ -30,14 +30,21 @@ export function NotificationBell({ orgId }: { orgId: string }) {
   const [open, setOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`/api/orgs/${orgId}/notifications`);
+      const res = await fetch(`/api/orgs/${orgId}/notifications`, { signal });
       if (!res.ok) return;
       const data = await res.json();
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+      if (error instanceof TypeError) {
+        // Transient network failures (dev server restarts, offline) should not spam console.
+        return;
+      }
       console.error("Failed to fetch notifications:", error);
     } finally {
       setInitialLoading(false);
@@ -45,9 +52,17 @@ export function NotificationBell({ orgId }: { orgId: string }) {
   }, [orgId]);
 
   useEffect(() => {
-    void fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
-    return () => clearInterval(interval);
+    const controller = new AbortController();
+    void fetchNotifications(controller.signal);
+
+    const interval = setInterval(() => {
+      void fetchNotifications();
+    }, 30000); // Poll every 30s
+
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {

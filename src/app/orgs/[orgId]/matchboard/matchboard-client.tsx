@@ -480,10 +480,18 @@ export function MatchboardClient({
             const criticalCount = m.missingCritical?.length ?? 0;
 
             return (
-              <button
+              <div
                 key={m.candidateId}
+                role="button"
+                tabIndex={0}
                 className="premium-subblock w-full rounded-2xl border bg-background/40 p-4 text-left transition hover:bg-accent/40"
                 onClick={() => setSelected(m)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(m);
+                  }
+                }}
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -526,7 +534,7 @@ export function MatchboardClient({
                       className="rounded-2xl"
                       disabled={statusBusyIds.has(m.candidateId)}
                       onClick={(e) => {
-                        e.preventDefault();
+                        e.stopPropagation();
                         updateStatus(m.candidateId, "NONE");
                       }}
                     >
@@ -538,7 +546,7 @@ export function MatchboardClient({
                       className="rounded-2xl"
                       disabled={statusBusyIds.has(m.candidateId)}
                       onClick={(e) => {
-                        e.preventDefault();
+                        e.stopPropagation();
                         updateStatus(m.candidateId, "SHORTLISTED");
                       }}
                     >
@@ -550,7 +558,7 @@ export function MatchboardClient({
                       className="rounded-2xl"
                       disabled={statusBusyIds.has(m.candidateId)}
                       onClick={(e) => {
-                        e.preventDefault();
+                        e.stopPropagation();
                         updateStatus(m.candidateId, "REJECTED", "Manual reject from matchboard");
                       }}
                     >
@@ -558,7 +566,7 @@ export function MatchboardClient({
                     </Button>
                   </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
