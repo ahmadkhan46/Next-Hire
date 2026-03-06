@@ -83,6 +83,11 @@ function validateEnv() {
     }
   }
 
+  const databaseUrl = String(env.DATABASE_URL ?? "");
+  if (isProductionTarget && /(localhost|127\.0\.0\.1)/i.test(databaseUrl)) {
+    errors.push("DATABASE_URL points to localhost/127.0.0.1. Use a hosted database URL for production.");
+  }
+
   const queueMode = (env.QUEUE_MODE ?? "memory").trim().toLowerCase();
   if (!["memory", "redis"].includes(queueMode)) {
     errors.push(`Invalid QUEUE_MODE="${env.QUEUE_MODE}". Allowed: memory|redis`);
