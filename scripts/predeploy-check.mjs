@@ -63,6 +63,9 @@ function isPlaceholder(value) {
 
 function validateEnv() {
   const env = mergedEnv();
+  const vercelEnv = String(env.VERCEL_ENV ?? "").toLowerCase();
+  const nodeEnv = String(env.NODE_ENV ?? "").toLowerCase();
+  const isProductionTarget = vercelEnv === "production" || nodeEnv === "production";
   const required = [
     "DATABASE_URL",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
@@ -85,9 +88,13 @@ function validateEnv() {
     errors.push(`Invalid QUEUE_MODE="${env.QUEUE_MODE}". Allowed: memory|redis`);
   }
   if (queueMode === "memory") {
-    warnings.push(
-      "QUEUE_MODE is memory. For production deploy set QUEUE_MODE=redis and run workers separately."
-    );
+    const message =
+      "QUEUE_MODE is memory. Use QUEUE_MODE=redis and run workers separately for production.";
+    if (isProductionTarget) {
+      errors.push(message);
+    } else {
+      warnings.push(message);
+    }
   }
   if (queueMode === "redis") {
     const redisUrl = env.REDIS_URL;
@@ -102,7 +109,12 @@ function validateEnv() {
 
   const appUrl = env.NEXT_PUBLIC_APP_URL ?? "";
   if (appUrl.startsWith("http://")) {
-    warnings.push("NEXT_PUBLIC_APP_URL uses http. Use https in production.");
+    const message = "NEXT_PUBLIC_APP_URL uses http://. Use https:// for production.";
+    if (isProductionTarget) {
+      errors.push(message);
+    } else {
+      warnings.push(message);
+    }
   }
 
   if (errors.length > 0) {

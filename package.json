@@ -16,15 +16,12 @@
     "audit:backfill:job-actors": "tsx scripts/backfill-job-audit-actors.ts",
     "smoke:test": "node scripts/smoke-test.mjs",
     "predeploy:check": "node scripts/predeploy-check.mjs",
-    "db:seed": "node prisma/seed.js",
+    "db:seed": "prisma db seed",
     "workers": "tsx src/workers/start.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed"
-  },
-  "prisma": {
-    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.37.3",
