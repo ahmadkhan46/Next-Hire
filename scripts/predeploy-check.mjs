@@ -64,8 +64,8 @@ function isPlaceholder(value) {
 function validateEnv() {
   const env = mergedEnv();
   const vercelEnv = String(env.VERCEL_ENV ?? "").toLowerCase();
-  const nodeEnv = String(env.NODE_ENV ?? "").toLowerCase();
-  const isProductionTarget = vercelEnv === "production" || nodeEnv === "production";
+  const enforceProdChecks = String(env.ENFORCE_PROD_CHECKS ?? "") === "1";
+  const isProductionTarget = vercelEnv === "production" || enforceProdChecks;
   const required = [
     "DATABASE_URL",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
