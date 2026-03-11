@@ -269,14 +269,8 @@ export async function verifyResourceAccess(
     throw new Error('Either candidateId or jobId must be provided');
   }
 
-  // Verify user has access to this org
-  const membership = await prisma.membership.findUnique({
-    where: { userId_orgId: { userId, orgId } },
-  });
-
-  if (!membership) {
-    throw new Error('Forbidden: No access to this resource');
-  }
+  // Use the RBAC org access resolver so Clerk IDs and internal DB user IDs both work.
+  await enforceOrgAccess(userId, orgId);
 
   return orgId;
 }

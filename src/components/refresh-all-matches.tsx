@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 type RefreshAllMatchesProps = {
   orgId: string;
@@ -20,6 +21,7 @@ export function RefreshAllMatches({
   successMessage = 'All matches refreshed successfully!',
   errorMessage = 'Failed to refresh matches',
 }: RefreshAllMatchesProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleRefresh = async () => {
@@ -34,6 +36,7 @@ export function RefreshAllMatches({
       if (!res.ok) throw new Error(errorMessage);
 
       toast.success(successMessage);
+      router.refresh();
     } catch {
       toast.error(errorMessage);
     } finally {

@@ -28,15 +28,10 @@ export async function getOrgAnalytics(orgId: string, jobId?: string | null): Pro
   const baseFilter = { orgId };
   const jobFilter = jobId ? { ...baseFilter, jobId } : baseFilter;
 
-  const [totalCandidates, totalJobs, statusBreakdown, recentActivity, topSkillsGaps] =
+  const [totalCandidates, totalJobs, recentActivity, topSkillsGaps, orgWideStatuses, jobStatuses] =
     await Promise.all([
       prisma.candidate.count({ where: baseFilter }),
       prisma.job.count({ where: { ...baseFilter, status: "OPEN" } }),
-      prisma.matchResult.groupBy({
-        by: ["status"],
-        where: jobFilter,
-        _count: { status: true },
-      }),
       prisma.matchDecisionLog.count({
         where: {
           ...jobFilter,
@@ -57,12 +52,61 @@ export async function getOrgAnalytics(orgId: string, jobId?: string | null): Pro
           LIMIT 10
         `
       ),
+      jobId
+        ? Promise.resolve([])
+        : prisma.matchResult.findMany({
+            where: baseFilter,
+            select: { candidateId: true, status: true },
+          }),
+      jobId
+        ? prisma.matchResult.groupBy({
+            by: ["status"],
+            where: jobFilter,
+            _count: { status: true },
+          })
+        : Promise.resolve([]),
     ]);
 
-  const statusCounts = statusBreakdown.reduce((acc, item) => {
-    acc[item.status] = item._count.status;
-    return acc;
-  }, {} as Record<string, number>);
+  let statusCounts: Record<string, number>;
+
+  if (jobId) {
+    statusCounts = jobStatuses.reduce((acc, item) => {
+      acc[item.status] = item._count.status;
+      return acc;
+    }, {} as Record<string, number>);
+  } else {
+    const candidateStatus = new Map<string, "NONE" | "SHORTLISTED" | "REJECTED">();
+
+    for (const row of orgWideStatuses) {
+      const current = candidateStatus.get(row.candidateId);
+      const next = row.status;
+
+      if (!current) {
+        candidateStatus.set(row.candidateId, next);
+        continue;
+      }
+
+      // Candidate-level rollup priority:
+      // SHORTLISTED wins, NONE beats REJECTED when there is still an unreviewed path.
+      if (current === "SHORTLISTED" || next === "SHORTLISTED") {
+        candidateStatus.set(row.candidateId, "SHORTLISTED");
+      } else if (current === "NONE" || next === "NONE") {
+        candidateStatus.set(row.candidateId, "NONE");
+      } else {
+        candidateStatus.set(row.candidateId, "REJECTED");
+      }
+    }
+
+    statusCounts = { NONE: 0, SHORTLISTED: 0, REJECTED: 0 };
+    for (const status of candidateStatus.values()) {
+      statusCounts[status] += 1;
+    }
+
+    const classified = statusCounts.SHORTLISTED + statusCounts.REJECTED + statusCounts.NONE;
+    if (classified < totalCandidates) {
+      statusCounts.NONE += totalCandidates - classified;
+    }
+  }
 
   const total = Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
   const shortlistRate = total > 0 ? (((statusCounts.SHORTLISTED || 0) / total) * 100) : 0;

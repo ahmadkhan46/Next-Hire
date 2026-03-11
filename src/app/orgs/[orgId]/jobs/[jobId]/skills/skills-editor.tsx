@@ -270,6 +270,7 @@ export function JobSkillsEditor({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Failed to re-run matching");
       toast.success("Matchboard updated");
+      router.refresh();
     } catch (e: any) {
       toast.error(e?.message ?? "Re-run failed");
     } finally {
