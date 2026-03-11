@@ -33,12 +33,19 @@ export function RefreshAllMatches({
         body: JSON.stringify({ recalculateAll: true }),
       });
 
-      if (!res.ok) throw new Error(errorMessage);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data?.error === 'string' && data.error.trim().length > 0
+            ? data.error
+            : errorMessage
+        );
+      }
 
       toast.success(successMessage);
       router.refresh();
-    } catch {
-      toast.error(errorMessage);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : errorMessage);
     } finally {
       setLoading(false);
     }

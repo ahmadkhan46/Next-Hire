@@ -272,7 +272,7 @@ export function JobSkillsEditor({
       toast.success("Matchboard updated");
       router.refresh();
     } catch (e: any) {
-      toast.error(e?.message ?? "Re-run failed");
+      toast.error(e?.message ?? "Failed to re-run matching");
     } finally {
       setRerunning(false);
     }
