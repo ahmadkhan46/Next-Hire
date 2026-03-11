@@ -2,7 +2,7 @@
 
 ## 📋 Executive Summary
 
-**CareerOS** is a sophisticated AI-powered recruitment intelligence platform built with Next.js 14, TypeScript, and PostgreSQL. The platform provides enterprise-grade candidate management, intelligent job matching, and comprehensive analytics for modern hiring teams.
+**NextHire** is a sophisticated AI-powered recruitment intelligence platform built with Next.js 14, TypeScript, and PostgreSQL. The platform provides enterprise-grade candidate management, intelligent job matching, and comprehensive analytics for modern hiring teams.
 
 **Key Metrics:**
 - **Technology Stack**: 15+ integrated technologies
@@ -1125,7 +1125,7 @@ Enterprise: Custom pricing
 
 ## 📝 Conclusion
 
-**CareerOS** represents a comprehensive, enterprise-grade recruitment intelligence platform that combines modern web technologies with advanced AI capabilities. The platform successfully addresses the core challenges in talent acquisition through:
+**NextHire** represents a comprehensive, enterprise-grade recruitment intelligence platform that combines modern web technologies with advanced AI capabilities. The platform successfully addresses the core challenges in talent acquisition through:
 
 ### **Technical Excellence**
 - **Modern Architecture**: Next.js 14, TypeScript, PostgreSQL

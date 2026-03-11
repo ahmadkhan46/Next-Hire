@@ -148,7 +148,7 @@ async function seedCandidates(orgId: string) {
     const idx = i + 1;
     const [fullName, location, currentTitle, source] = CANDIDATES[i];
     const externalId = `SAMPLE-CAND-${String(idx).padStart(3, "0")}`;
-    const email = `${fullName.toLowerCase().replace(/[^a-z]/g, ".").replace(/\.+/g, ".")}.sample@careeros.dev`;
+    const email = `${fullName.toLowerCase().replace(/[^a-z]/g, ".").replace(/\.+/g, ".")}.sample@nexthire.dev`;
 
     const candidate = await prisma.candidate.upsert({
       where: { orgId_externalId: { orgId, externalId } },

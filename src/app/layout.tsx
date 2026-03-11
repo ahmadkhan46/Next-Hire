@@ -9,7 +9,7 @@ import { getClerkPublishableKey, isClerkClientEnabled } from "@/lib/clerk-config
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "CareerOS",
+  title: "NextHire",
   description: "AI-powered career & talent intelligence platform",
 };
 

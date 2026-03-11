@@ -5,7 +5,21 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function RefreshAllMatches({ orgId }: { orgId: string }) {
+type RefreshAllMatchesProps = {
+  orgId: string;
+  label?: string;
+  loadingLabel?: string;
+  successMessage?: string;
+  errorMessage?: string;
+};
+
+export function RefreshAllMatches({
+  orgId,
+  label = 'Refresh All Matches',
+  loadingLabel = 'Refreshing...',
+  successMessage = 'All matches refreshed successfully!',
+  errorMessage = 'Failed to refresh matches',
+}: RefreshAllMatchesProps) {
   const [loading, setLoading] = useState(false);
 
   const handleRefresh = async () => {
@@ -17,11 +31,11 @@ export function RefreshAllMatches({ orgId }: { orgId: string }) {
         body: JSON.stringify({ recalculateAll: true }),
       });
 
-      if (!res.ok) throw new Error('Failed to refresh matches');
+      if (!res.ok) throw new Error(errorMessage);
 
-      toast.success('All matches refreshed successfully!');
+      toast.success(successMessage);
     } catch {
-      toast.error('Failed to refresh matches');
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -35,7 +49,7 @@ export function RefreshAllMatches({ orgId }: { orgId: string }) {
       disabled={loading}
     >
       <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-      Refresh All Matches
+      {loading ? loadingLabel : label}
     </Button>
   );
 }

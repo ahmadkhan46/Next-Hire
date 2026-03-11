@@ -56,7 +56,7 @@ export default function DemoOrgDashboard() {
                 Demo Workspace
               </div>
               <h1 className="text-3xl font-black text-slate-900 md:text-4xl">
-                Welcome to CareerOS
+                Welcome to NextHire
               </h1>
               <p className="text-slate-600 max-w-2xl">
                 Explore a read-only preview of the hiring intelligence platform.

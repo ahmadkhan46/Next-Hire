@@ -67,7 +67,7 @@ export function Navigation() {
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-slate-900 text-white">
                 <Sparkles className="h-4 w-4" />
               </div>
-              <span className="text-lg font-black text-slate-900">CareerOS</span>
+              <span className="text-lg font-black text-slate-900">NextHire</span>
             </Link>
 
             {orgId && (

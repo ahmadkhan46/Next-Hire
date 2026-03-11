@@ -25,7 +25,7 @@ export function Sidebar({ orgId }: { orgId: string }) {
         </div>
         <div className="leading-tight">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-tight">CareerOS</span>
+            <span className="text-sm font-semibold tracking-tight">NextHire</span>
             <Badge variant="secondary" className="h-5 px-2 text-[10px]">
               ALPHA
             </Badge>

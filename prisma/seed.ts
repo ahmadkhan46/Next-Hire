@@ -47,7 +47,7 @@ async function main() {
 
   const seedEmail = "ahmadkhan58012@gmail.com";
   const seedName = "Ahmad Khan";
-  const orgName = "CareerOS";
+  const orgName = "NextHire";
 
   let org = await prisma.organization.findFirst({
     orderBy: { createdAt: "asc" },

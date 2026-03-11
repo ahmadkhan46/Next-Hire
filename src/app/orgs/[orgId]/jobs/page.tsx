@@ -6,6 +6,7 @@ import { ArrowUpRight, Briefcase } from "lucide-react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CreateJob } from "./create-job";
+import { RefreshAllMatches } from "@/components/refresh-all-matches";
 
 export default async function JobsPage({
   params,
@@ -59,6 +60,13 @@ export default async function JobsPage({
           >
             Back <ArrowUpRight className="h-4 w-4" />
           </Link>
+          <RefreshAllMatches
+            orgId={orgId}
+            label="Re-run All Matchboards"
+            loadingLabel="Re-running..."
+            successMessage="All job matchboards updated"
+            errorMessage="Failed to re-run all matchboards"
+          />
           <CreateJob orgId={orgId} />
         </div>
       </div>
