@@ -1,6 +1,7 @@
 import winston from 'winston';
 
 const isProduction = process.env.NODE_ENV === 'production';
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
 // Custom format to redact PII
 const redactPII = winston.format((info) => {
@@ -39,8 +40,8 @@ export const logger = winston.createLogger({
   ],
 });
 
-// Add file transport in production
-if (isProduction) {
+// Serverless environments like Vercel should log to stdout only.
+if (isProduction && !isVercel) {
   logger.add(
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' })
   );
