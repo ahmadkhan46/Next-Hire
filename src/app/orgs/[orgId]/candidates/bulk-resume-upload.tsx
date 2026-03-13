@@ -293,12 +293,29 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
         },
         body: form,
       });
-      const data = await res.json().catch(() => ({}));
+      const rawText = await res.text();
+      let data: Record<string, any> = {};
+      if (rawText) {
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          data = { rawText };
+        }
+      }
       const responseCorrelationId =
         res.headers.get("x-correlation-id") || data?.correlationId || requestCorrelationId;
       activeCorrelationId = responseCorrelationId;
       setCorrelationId(responseCorrelationId);
-      if (!res.ok) throw new Error(data?.error ?? "Upload failed");
+      if (!res.ok) {
+        const responseMessage =
+          data?.error ||
+          (typeof data?.rawText === "string" && data.rawText.trim()
+            ? data.rawText.trim().slice(0, 200)
+            : null);
+        throw new Error(
+          responseMessage ? `${responseMessage} (HTTP ${res.status})` : `Upload failed (HTTP ${res.status})`
+        );
+      }
 
       const nextResults: UploadResult[] = data?.results ?? [];
       const success = nextResults.filter((r) => r.ok).length;
