@@ -43,6 +43,7 @@ export function createRoute<T = any>(
     let userId: string | undefined;
     let orgId: string | undefined;
     let statusCode = 200;
+    const correlationId = req.headers.get("x-correlation-id")?.trim() || undefined;
 
     try {
       // 1. Authentication
@@ -177,17 +178,25 @@ export function createRoute<T = any>(
         method: req.method,
         userId,
         orgId,
+        correlationId,
       });
 
       statusCode = errorResponse.statusCode;
 
-      return NextResponse.json(
-        { 
-          error: sanitizeHtml(errorResponse.error), 
-          code: errorResponse.code 
+      const response = NextResponse.json(
+        {
+          error: sanitizeHtml(errorResponse.error),
+          code: errorResponse.code,
+          correlationId,
         },
         { status: errorResponse.statusCode }
       );
+
+      if (correlationId) {
+        response.headers.set("x-correlation-id", correlationId);
+      }
+
+      return response;
     } finally {
       // Log request
       logAPIRequest({

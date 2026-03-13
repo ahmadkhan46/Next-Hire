@@ -40,9 +40,9 @@ export async function getOrgAnalytics(orgId: string, jobId?: string | null): Pro
       }),
       prisma.$queryRaw<SkillGapRow[]>(
         Prisma.sql`
-          SELECT skill_name, COUNT(*) as gap_count
+          SELECT skill_name, COUNT(DISTINCT "candidateId") as gap_count
           FROM (
-            SELECT DISTINCT mr.id, jsonb_array_elements_text(mr.missing) as skill_name
+            SELECT DISTINCT mr."candidateId", jsonb_array_elements_text(mr.missing) as skill_name
             FROM "MatchResult" mr
             WHERE mr."orgId" = ${orgId}
             ${jobId ? Prisma.sql`AND mr."jobId" = ${jobId}` : Prisma.empty}

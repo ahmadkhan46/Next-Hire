@@ -110,6 +110,9 @@ export function MatchboardClient({
   const [bulkBusy, setBulkBusy] = React.useState(false);
   const [history, setHistory] = React.useState<MatchDecisionEntry[]>([]);
   const [historyLoading, setHistoryLoading] = React.useState(false);
+  const [thresholdOpen, setThresholdOpen] = React.useState(false);
+  const [minScorePct, setMinScorePct] = React.useState(40);
+  const [thresholdDraft, setThresholdDraft] = React.useState("40");
 
   const activeJob = React.useMemo(
     () => jobs.find((j) => j.id === jobId) ?? null,
@@ -175,13 +178,15 @@ export function MatchboardClient({
   const filtered = React.useMemo(() => {
     const query = q.trim().toLowerCase();
     let rows = matches.filter((m) => {
+      const scorePct = Math.round((m.score ?? 0) * 100);
+      const scoreOk = scorePct > 0 && scorePct >= minScorePct;
       const statusOk =
         statusFilter === "ALL"
           ? true
           : statusFilter === "NONE"
           ? m.status === "NONE"
           : m.status === statusFilter;
-      return statusOk;
+      return scoreOk && statusOk;
     });
 
     if (query) {
@@ -215,7 +220,7 @@ export function MatchboardClient({
     });
 
     return rows;
-  }, [matches, q, sort, statusFilter]);
+  }, [matches, q, sort, statusFilter, minScorePct]);
 
   const topMatch = React.useMemo(() => {
     if (filtered.length === 0) return null;
@@ -291,6 +296,19 @@ export function MatchboardClient({
     }
   }
 
+  function applyThreshold() {
+    const parsed = Number(thresholdDraft);
+    if (!Number.isFinite(parsed)) {
+      toast.error("Enter a valid threshold");
+      return;
+    }
+
+    const clamped = Math.max(0, Math.min(100, Math.round(parsed)));
+    setMinScorePct(clamped);
+    setThresholdDraft(String(clamped));
+    setThresholdOpen(false);
+  }
+
   React.useEffect(() => {
     if (!selected || !jobId) return;
     let cancelled = false;
@@ -330,7 +348,7 @@ export function MatchboardClient({
 
   return (
     <Card className="premium-block rounded-3xl border bg-card/50 p-6 shadow-sm">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_auto] xl:items-center">
         <div>
           <div className="text-xs text-muted-foreground">Active job</div>
           <div className="mt-1 text-lg font-semibold">
@@ -341,7 +359,20 @@ export function MatchboardClient({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex xl:justify-center">
+          <Button
+            variant="outline"
+            className="rounded-2xl"
+            onClick={() => {
+              setThresholdDraft(String(minScorePct));
+              setThresholdOpen(true);
+            }}
+          >
+            Threshold {minScorePct}%
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
           <div className="relative">
             <select
               value={jobId ?? ""}
@@ -470,10 +501,10 @@ export function MatchboardClient({
         <div className="text-sm text-muted-foreground">Loading...</div>
       ) : filtered.length === 0 ? (
         <div className="premium-subblock rounded-2xl border border-dashed bg-background/40 p-6 text-sm text-muted-foreground">
-          No matches yet. Try re-running the match or adjust skills.
+          No candidates meet the current threshold. Try lowering it or re-running the match.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="h-[24rem] space-y-3 overflow-y-auto pr-2">
           {filtered.map((m) => {
             const scorePct = Math.round((m.score ?? 0) * 100);
             const missingCount = m.missing?.length ?? 0;
@@ -571,6 +602,44 @@ export function MatchboardClient({
           })}
         </div>
       )}
+
+      <Dialog open={thresholdOpen} onOpenChange={setThresholdOpen}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Set match threshold</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Hide candidates below this score. Default is 40%.
+            </div>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={thresholdDraft}
+              onChange={(e) => setThresholdDraft(e.target.value)}
+              className="h-10 rounded-2xl"
+              placeholder="40"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => {
+                  setThresholdDraft(String(minScorePct));
+                  setThresholdOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button className="rounded-2xl" onClick={applyThreshold}>
+                Apply
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="max-w-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
