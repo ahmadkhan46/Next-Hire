@@ -15,16 +15,47 @@ type PdfParseRuntime = {
   PDFParse: PDFParseConstructor;
 };
 
+type CanvasRuntime = {
+  DOMMatrix?: unknown;
+  Path2D?: unknown;
+  ImageData?: unknown;
+};
+
 type MammothRuntime = {
   extractRawText: (input: { buffer: Buffer }) => Promise<{ value?: string | null }>;
 };
 
 let pdfParseModule: PdfParseRuntime | null = null;
 let mammothModule: MammothRuntime | null = null;
+let canvasModule: CanvasRuntime | null = null;
 const requireFromHere = createRequire(import.meta.url);
+const canvasRuntimePackage = ["@napi-rs", "canvas"].join("/");
+
+function ensurePdfCanvasGlobals() {
+  const globalObject = globalThis as Record<string, unknown>;
+  const needsCanvasRuntime =
+    typeof globalObject.DOMMatrix === "undefined" ||
+    typeof globalObject.Path2D === "undefined" ||
+    typeof globalObject.ImageData === "undefined";
+
+  if (!needsCanvasRuntime) return;
+
+  canvasModule ??= requireFromHere(canvasRuntimePackage) as CanvasRuntime;
+
+  if (typeof globalObject.DOMMatrix === "undefined" && canvasModule.DOMMatrix) {
+    globalObject.DOMMatrix = canvasModule.DOMMatrix;
+  }
+  if (typeof globalObject.Path2D === "undefined" && canvasModule.Path2D) {
+    globalObject.Path2D = canvasModule.Path2D;
+  }
+  if (typeof globalObject.ImageData === "undefined" && canvasModule.ImageData) {
+    globalObject.ImageData = canvasModule.ImageData;
+  }
+}
 
 async function getPdfParse(): Promise<PdfParseRuntime> {
   if (pdfParseModule) return pdfParseModule;
+  ensurePdfCanvasGlobals();
   const mod = requireFromHere("pdf-parse");
   const resolved = ((mod as any).PDFParse ? mod : (mod as any).default) as PdfParseRuntime | undefined;
   if (!resolved?.PDFParse) {
