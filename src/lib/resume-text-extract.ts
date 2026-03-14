@@ -1,74 +1,48 @@
-import { createRequire } from "node:module";
-
-type PdfParseResult = {
-  text?: string | null;
-};
-
-type PDFParseInstance = {
-  getText: () => Promise<PdfParseResult>;
-  destroy: () => Promise<void>;
-};
-
-type PDFParseConstructor = new (input: { data: Buffer | Uint8Array }) => PDFParseInstance;
-
-type PdfParseRuntime = {
-  PDFParse: PDFParseConstructor;
-};
-
-type CanvasRuntime = {
-  DOMMatrix?: unknown;
-  Path2D?: unknown;
-  ImageData?: unknown;
-};
-
 type MammothRuntime = {
   extractRawText: (input: { buffer: Buffer }) => Promise<{ value?: string | null }>;
 };
 
-let pdfParseModule: PdfParseRuntime | null = null;
+type PdfJsTextItem = {
+  str?: string;
+};
+
+type PdfJsTextMarkedContent = {
+  type?: string;
+};
+
+type PdfJsPage = {
+  getTextContent: () => Promise<{
+    items: Array<PdfJsTextItem | PdfJsTextMarkedContent>;
+  }>;
+};
+
+type PdfJsDocument = {
+  numPages: number;
+  getPage: (pageNumber: number) => Promise<PdfJsPage>;
+  destroy: () => Promise<void>;
+};
+
+type PdfJsLoadingTask = {
+  promise: Promise<PdfJsDocument>;
+  destroy?: () => void;
+};
+
+type PdfJsRuntime = {
+  getDocument: (options: {
+    data: Uint8Array;
+    disableWorker: boolean;
+    useWorkerFetch: boolean;
+    isEvalSupported: boolean;
+  }) => PdfJsLoadingTask;
+};
+
 let mammothModule: MammothRuntime | null = null;
-let canvasModule: CanvasRuntime | null = null;
-const requireFromHere = createRequire(import.meta.url);
-const canvasRuntimePackage = ["@napi-rs", "canvas"].join("/");
-
-function ensurePdfCanvasGlobals() {
-  const globalObject = globalThis as Record<string, unknown>;
-  const needsCanvasRuntime =
-    typeof globalObject.DOMMatrix === "undefined" ||
-    typeof globalObject.Path2D === "undefined" ||
-    typeof globalObject.ImageData === "undefined";
-
-  if (!needsCanvasRuntime) return;
-
-  canvasModule ??= requireFromHere(canvasRuntimePackage) as CanvasRuntime;
-
-  if (typeof globalObject.DOMMatrix === "undefined" && canvasModule.DOMMatrix) {
-    globalObject.DOMMatrix = canvasModule.DOMMatrix;
-  }
-  if (typeof globalObject.Path2D === "undefined" && canvasModule.Path2D) {
-    globalObject.Path2D = canvasModule.Path2D;
-  }
-  if (typeof globalObject.ImageData === "undefined" && canvasModule.ImageData) {
-    globalObject.ImageData = canvasModule.ImageData;
-  }
-}
-
-async function getPdfParse(): Promise<PdfParseRuntime> {
-  if (pdfParseModule) return pdfParseModule;
-  ensurePdfCanvasGlobals();
-  const mod = requireFromHere("pdf-parse");
-  const resolved = ((mod as any).PDFParse ? mod : (mod as any).default) as PdfParseRuntime | undefined;
-  if (!resolved?.PDFParse) {
-    throw new Error("pdf-parse runtime is unavailable");
-  }
-  pdfParseModule = resolved;
-  return pdfParseModule;
-}
+let pdfJsModule: PdfJsRuntime | null = null;
 
 async function getMammoth(): Promise<MammothRuntime> {
   if (mammothModule) return mammothModule;
   const mod = await import("mammoth");
-  const resolved = ((mod as any).extractRawText ? (mod as any) : (mod as any).default) as
+  const resolved = ((mod as any).extractRawText ? mod : (mod as any).default) as
     | MammothRuntime
     | undefined;
   if (!resolved?.extractRawText) {
@@ -78,22 +52,55 @@ async function getMammoth(): Promise<MammothRuntime> {
   return mammothModule;
 }
 
+async function getPdfJs(): Promise<PdfJsRuntime> {
+  if (pdfJsModule) return pdfJsModule;
+  const mod = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const resolved = mod as unknown as PdfJsRuntime;
+  if (typeof resolved?.getDocument !== "function") {
+    throw new Error("pdfjs runtime is unavailable");
+  }
+  pdfJsModule = resolved;
+  return pdfJsModule;
+}
+
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  const { PDFParse } = await getPdfParse();
-  const parser = new PDFParse({ data: buffer });
+  const pdfjs = await getPdfJs();
+  const loadingTask = pdfjs.getDocument({
+    data: new Uint8Array(buffer),
+    disableWorker: true,
+    useWorkerFetch: false,
+    isEvalSupported: false,
+  });
+
+  let document: PdfJsDocument | null = null;
   try {
-    const result = await parser.getText();
-    return result.text?.trim() ?? "";
+    document = await loadingTask.promise;
+    const pages: string[] = [];
+
+    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+      const page = await document.getPage(pageNumber);
+      const content = await page.getTextContent();
+      const text = content.items
+        .map((item) => ("str" in item && typeof item.str === "string" ? item.str : ""))
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+      if (text) {
+        pages.push(text);
+      }
+    }
+
+    return pages.join("\n\n").trim();
   } finally {
-    await parser.destroy();
+    loadingTask.destroy?.();
+    if (document) {
+      await document.destroy();
+    }
   }
 }
 
-export async function extractTextFromFile(
-  fileName: string,
-  mimeType: string,
-  buffer: Buffer
-) {
+export async function extractTextFromFile(fileName: string, mimeType: string, buffer: Buffer) {
   if (mimeType === "application/pdf" || fileName.toLowerCase().endsWith(".pdf")) {
     return extractTextFromPdf(buffer);
   }
