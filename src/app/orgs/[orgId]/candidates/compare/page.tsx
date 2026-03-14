@@ -224,18 +224,18 @@ export default async function CompareCandidatesPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Candidate Comparison</h1>
           <p className="mt-2 text-muted-foreground">
             Side-by-side profile comparison for decision support.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
           <CompareActions />
           <Link
             href={fromCandidateId ? `/orgs/${orgId}/candidates/${fromCandidateId}` : `/orgs/${orgId}/candidates`}
-            className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
           >
             Back <ArrowUpRight className="h-4 w-4" />
           </Link>

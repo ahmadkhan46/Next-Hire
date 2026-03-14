@@ -147,14 +147,14 @@ export function Topbar({ orgId }: { orgId: string }) {
 
   return (
     <header className="sticky top-0 z-30 border-b bg-background/70 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-[1200px] items-center gap-3 px-4 py-3 md:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-3 py-3 sm:px-4 md:flex-row md:items-center md:px-6 lg:px-8">
         <CommandPalette
           orgId={orgId}
           open={commandOpen}
           onOpenChange={setCommandOpen}
         />
 
-        <div className="relative flex-1" ref={searchRef}>
+        <div className="relative order-2 w-full flex-1 md:order-1" ref={searchRef}>
           <div className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b from-transparent via-slate-400/70 to-transparent" />
           {loading ? (
             <Loader2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -166,13 +166,13 @@ export function Topbar({ orgId }: { orgId: string }) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => query.trim() && setShowResults(true)}
-            className="h-11 rounded-2xl border border-slate-300/80 bg-white/80 pl-10 pr-20 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)]"
+            className="h-11 rounded-2xl border border-slate-300/80 bg-white/80 pl-10 pr-4 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] sm:pr-20"
             placeholder="Search candidates, jobs, and pages..."
           />
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-50"
+            className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-50 sm:inline-flex"
             aria-label="Open command palette"
           >
             Ctrl+K
@@ -273,25 +273,38 @@ export function Topbar({ orgId }: { orgId: string }) {
           )}
         </div>
 
-        <NotificationBell orgId={orgId} />
+        <div className="order-1 flex w-full items-center justify-end gap-2 md:order-2 md:w-auto md:shrink-0">
+          <div className="sm:hidden">
+            <button
+              type="button"
+              onClick={() => setCommandOpen(true)}
+              className="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] hover:bg-slate-100"
+              aria-label="Open command palette"
+            >
+              Search
+            </button>
+          </div>
 
-        {clerkEnabled ? (
-          <SignedOut>
+          <NotificationBell orgId={orgId} />
+
+          {clerkEnabled ? (
+            <SignedOut>
+              <Link
+                href="/sign-in"
+                className="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] hover:bg-slate-100"
+              >
+                Sign in
+              </Link>
+            </SignedOut>
+          ) : (
             <Link
               href="/sign-in"
-              className="ml-1 inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] hover:bg-slate-100"
+              className="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] hover:bg-slate-100"
             >
               Sign in
             </Link>
-          </SignedOut>
-        ) : (
-          <Link
-            href="/sign-in"
-            className="ml-1 inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)] hover:bg-slate-100"
-          >
-            Sign in
-          </Link>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );

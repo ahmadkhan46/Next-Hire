@@ -367,13 +367,13 @@ export function EditCandidateEnhanced({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto inner-scroll rounded-3xl border border-slate-200/80 shadow-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/80 shadow-2xl inner-scroll">
         <DialogHeader>
           <DialogTitle>Edit Candidate Profile</DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-5">
             <TabsTrigger value="personal">Personal</TabsTrigger>
             <TabsTrigger value="experience">Experience</TabsTrigger>
             <TabsTrigger value="education">Education</TabsTrigger>
@@ -386,7 +386,7 @@ export function EditCandidateEnhanced({
               <Label>Full Name *</Label>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label>Email</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -400,7 +400,7 @@ export function EditCandidateEnhanced({
               <Label>Location</Label>
               <Input value={location} onChange={(e) => setLocation(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label>Current Title</Label>
                 <Input value={currentTitle} onChange={(e) => setCurrentTitle(e.target.value)} />
@@ -463,7 +463,7 @@ export function EditCandidateEnhanced({
                 ))}
               </div>
             ) : null}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label>Company *</Label>
                 <Input value={expCompany} onChange={(e) => setExpCompany(e.target.value)} />
@@ -477,7 +477,7 @@ export function EditCandidateEnhanced({
               <Label>Location</Label>
               <Input value={expLocation} onChange={(e) => setExpLocation(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label>Start Date *</Label>
                 <Input type="date" value={expStart} onChange={(e) => setExpStart(e.target.value)} />
@@ -514,7 +514,7 @@ export function EditCandidateEnhanced({
                           {edu.startYear ?? ''}{edu.endYear ? ` - ${edu.endYear}` : ''}
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -571,7 +571,7 @@ export function EditCandidateEnhanced({
               <Label>Location</Label>
               <Input value={eduLocation} onChange={(e) => setEduLocation(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label>Start Year</Label>
                 <Input type="number" value={eduStart} onChange={(e) => setEduStart(e.target.value)} />

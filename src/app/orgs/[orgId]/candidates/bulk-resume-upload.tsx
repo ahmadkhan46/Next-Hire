@@ -377,7 +377,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
           </div>
           <div className="rounded-xl border bg-background/40 p-3 text-xs">
             <div className="mb-2 font-semibold">Duplicate handling</div>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <label className="inline-flex items-center gap-2">
                 <input
                   type="radio"
@@ -418,7 +418,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
               ))}
             </select>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
             <Button
               className="rounded-2xl"
               onClick={uploadAll}
@@ -471,8 +471,8 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                   </div>
                 ) : null}
               </div>
-              <div className="max-h-48 overflow-y-auto inner-scroll rounded-2xl border bg-background/40 p-3 text-xs">
-                <div className="grid grid-cols-[1.5fr_0.8fr_2fr] gap-2 font-semibold text-muted-foreground">
+              <div className="max-h-48 overflow-y-auto rounded-2xl border bg-background/40 p-3 text-xs inner-scroll">
+                <div className="hidden grid-cols-[1.5fr_0.8fr_2fr] gap-2 font-semibold text-muted-foreground sm:grid">
                   <span>File</span>
                   <span>Status</span>
                   <span>Details</span>
@@ -481,9 +481,9 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                   {results.map((r, idx) => (
                     <div
                       key={`${r.fileName}-${idx}`}
-                      className="grid grid-cols-[1.5fr_0.8fr_2fr] gap-2"
+                      className="grid gap-1 rounded-xl border border-slate-200/70 bg-white/70 p-2 sm:grid-cols-[1.5fr_0.8fr_2fr] sm:gap-2 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0"
                     >
-                      <span className="truncate" title={r.fileName}>
+                      <span className="truncate font-medium sm:font-normal" title={r.fileName}>
                         {r.fileName}
                       </span>
                       <span
@@ -556,8 +556,8 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                     </summary>
                     <div className="mt-2 space-y-1 border-t pt-2">
                       {batch.items.map((item) => (
-                        <div key={item.id} className="grid grid-cols-[1.5fr_0.8fr_2fr] gap-2">
-                          <span className="truncate" title={item.fileName}>
+                        <div key={item.id} className="grid gap-1 rounded-xl border border-slate-200/70 bg-white/70 p-2 sm:grid-cols-[1.5fr_0.8fr_2fr] sm:gap-2 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0">
+                          <span className="truncate font-medium sm:font-normal" title={item.fileName}>
                             {item.fileName}
                           </span>
                           <span

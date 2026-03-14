@@ -205,7 +205,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-2xl">
+        <Button className="w-full rounded-2xl sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Create Job
         </Button>
@@ -390,10 +390,10 @@ export function CreateJob({ orgId }: { orgId: string }) {
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <Button
               variant="ghost"
-              className="rounded-2xl"
+              className="rounded-2xl sm:min-w-24"
               onClick={onCancel}
               disabled={loading}
             >
@@ -401,7 +401,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
             </Button>
 
             <Button
-              className="rounded-2xl"
+              className="rounded-2xl sm:min-w-24"
               onClick={onSubmit}
               disabled={loading}
             >

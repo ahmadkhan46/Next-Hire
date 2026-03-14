@@ -41,28 +41,28 @@ export default async function MatchboardPage({
   const initialJobId = hasRequested ? requestedJobId : (jobs?.[0]?.id ?? null);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="relative min-h-full overflow-hidden">
       <div className="prestige-bg" />
       <div className="prestige-grid" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1400px] px-6 py-10 space-y-10">
+      <div className="relative z-10 mx-auto w-full max-w-[1400px] space-y-8 px-3 py-6 sm:px-4 md:px-6 md:py-8">
         {/* Premium Header */}
-        <div className="premium-block prestige-card rounded-[28px] p-8">
-          <div className="flex items-start justify-between gap-6">
+        <div className="premium-block prestige-card rounded-[28px] p-5 sm:p-6 md:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-3 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] prestige-pill">
                 <Sparkles className="h-4 w-4 text-slate-700" />
                 MATCHBOARD
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
                 Candidate Intelligence
               </h1>
-              <p className="text-base text-slate-600 max-w-2xl">
+              <p className="max-w-2xl text-sm text-slate-600 sm:text-base">
                 Precision matching with weighted scoring, critical gap analysis, and audit-ready decisions.
               </p>
             </div>
 
-            <div className="prestige-surface rounded-2xl p-4">
+            <div className="prestige-surface w-full rounded-2xl p-4 lg:w-auto">
               <div className="flex items-center gap-4">
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-white">
                   <Briefcase className="h-5 w-5" />
@@ -78,7 +78,7 @@ export default async function MatchboardPage({
 
         {/* Analytics Section */}
         {initialJobId && (
-          <div className="premium-block prestige-card rounded-[28px] p-8">
+          <div className="premium-block prestige-card rounded-[28px] p-5 sm:p-6 md:p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-white">
                 <BarChart3 className="h-5 w-5" />
@@ -91,7 +91,7 @@ export default async function MatchboardPage({
 
         {/* Matchboard Client */}
         {jobs.length === 0 ? (
-          <div className="premium-block prestige-card rounded-[28px] p-8">
+          <div className="premium-block prestige-card rounded-[28px] p-5 sm:p-6 md:p-8">
             <div className="text-sm text-slate-500">Matchboard</div>
             <div className="mt-2 text-2xl font-semibold text-slate-900">
               No jobs found

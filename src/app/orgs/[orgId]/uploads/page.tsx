@@ -239,7 +239,7 @@ export default async function UploadHistoryPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground">
             Upload Audit
@@ -252,7 +252,7 @@ export default async function UploadHistoryPage({
 
         <Link
           href={`/orgs/${orgId}/candidates`}
-          className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Candidates
         </Link>

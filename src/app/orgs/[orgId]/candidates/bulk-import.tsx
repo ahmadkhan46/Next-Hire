@@ -248,7 +248,7 @@ export function BulkImport({ orgId }: { orgId: string }) {
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl rounded-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -290,7 +290,7 @@ export function BulkImport({ orgId }: { orgId: string }) {
               <div>
                 Skills should be comma-separated in quotes (e.g., "React,Node.js,Python")
               </div>
-              <div className="flex flex-wrap gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap">
                 <Button variant="outline" onClick={() => downloadTemplate("basic")}>
                   Download Basic Template
                 </Button>
@@ -375,7 +375,7 @@ export function BulkImport({ orgId }: { orgId: string }) {
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
               <Button 
                 onClick={handleImport} 
                 disabled={!csvData.trim() || importing}

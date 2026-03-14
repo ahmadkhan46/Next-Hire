@@ -362,7 +362,7 @@ export function MatchboardClient({
         <div className="flex xl:justify-center">
           <Button
             variant="outline"
-            className="rounded-2xl"
+            className="w-full rounded-2xl sm:w-auto"
             onClick={() => {
               setThresholdDraft(String(minScorePct));
               setThresholdOpen(true);
@@ -372,12 +372,12 @@ export function MatchboardClient({
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
           <div className="relative">
             <select
               value={jobId ?? ""}
               onChange={(e) => setJobId(e.target.value || null)}
-              className="h-10 w-56 appearance-none rounded-2xl border bg-background/40 px-3 pr-9 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="h-10 w-full min-w-0 appearance-none rounded-2xl border bg-background/40 px-3 pr-9 text-sm outline-none focus:ring-2 focus:ring-ring sm:w-56"
             >
               <option value="" disabled>
                 Select a job...
@@ -434,7 +434,7 @@ export function MatchboardClient({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="h-9 w-full max-w-[220px] rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto"
+            className="h-9 w-full rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto md:max-w-[220px]"
           >
             <option value="ALL">All statuses</option>
             <option value="NONE">Unreviewed</option>
@@ -445,7 +445,7 @@ export function MatchboardClient({
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as any)}
-            className="h-9 w-full max-w-[220px] rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto"
+            className="h-9 w-full rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto md:max-w-[220px]"
           >
             <option value="score">Sort: score</option>
             <option value="critical">Sort: critical gaps</option>
@@ -457,7 +457,7 @@ export function MatchboardClient({
 
       <Separator className="my-5" />
 
-      <div className="flex flex-col gap-2 md:flex-row md:items-center">
+      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
         <Button
           variant="outline"
           className="rounded-2xl"
@@ -504,7 +504,7 @@ export function MatchboardClient({
           No candidates meet the current threshold. Try lowering it or re-running the match.
         </div>
       ) : (
-        <div className="h-[24rem] space-y-3 overflow-y-auto inner-scroll pr-2">
+        <div className="h-[24rem] space-y-3 overflow-y-auto pr-2 inner-scroll">
           {filtered.map((m) => {
             const scorePct = Math.round((m.score ?? 0) * 100);
             const missingCount = m.missing?.length ?? 0;

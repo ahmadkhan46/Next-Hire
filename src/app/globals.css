@@ -117,11 +117,15 @@
 }
 
 @layer base {
+  html {
+    @apply overflow-x-hidden;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-gradient-to-br from-slate-50 via-white to-blue-50 text-foreground min-h-screen;
+    @apply min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 text-foreground;
   }
 }
 

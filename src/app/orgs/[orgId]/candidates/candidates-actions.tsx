@@ -18,10 +18,10 @@ export function CandidatesActions({ orgId }: { orgId: string }) {
 
   if (!mounted) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
         <Link
           href={`/orgs/${orgId}/candidates/compare`}
-          className="inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+          className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
         >
           Compare Candidates <ArrowUpRight className="h-4 w-4" />
         </Link>
@@ -29,13 +29,13 @@ export function CandidatesActions({ orgId }: { orgId: string }) {
           href={`/orgs/${orgId}/uploads`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+          className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
         >
           Import Activity <ArrowUpRight className="h-4 w-4" />
         </Link>
         <Link
           href={`/orgs/${orgId}`}
-          className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
         >
           Back <ArrowUpRight className="h-4 w-4" />
         </Link>
@@ -44,7 +44,7 @@ export function CandidatesActions({ orgId }: { orgId: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
       <RefreshAllMatches orgId={orgId} />
       <AddCandidateMultiStep orgId={orgId} />
       <BulkImport orgId={orgId} />
@@ -52,7 +52,7 @@ export function CandidatesActions({ orgId }: { orgId: string }) {
       <ExportCandidates orgId={orgId} />
       <Link
         href={`/orgs/${orgId}/candidates/compare`}
-        className="inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+        className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
       >
         Compare Candidates <ArrowUpRight className="h-4 w-4" />
       </Link>
@@ -60,13 +60,13 @@ export function CandidatesActions({ orgId }: { orgId: string }) {
         href={`/orgs/${orgId}/uploads`}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+        className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
       >
         Import Activity <ArrowUpRight className="h-4 w-4" />
       </Link>
       <Link
         href={`/orgs/${orgId}`}
-        className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
       >
         Back <ArrowUpRight className="h-4 w-4" />
       </Link>

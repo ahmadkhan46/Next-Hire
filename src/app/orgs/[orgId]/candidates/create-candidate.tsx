@@ -358,12 +358,12 @@ export function CreateCandidate({ orgId }: { orgId: string }) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[720px] max-h-[85vh] rounded-[32px] border border-slate-200/80 bg-white/95 p-0 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.6)] overflow-hidden">
+      <DialogContent className="max-h-[85vh] sm:max-w-[720px] rounded-[32px] border border-slate-200/80 bg-white/95 p-0 shadow-[0_30px_80px_-50px_rgba(15,23,42,0.6)] overflow-hidden">
         <div className="relative overflow-hidden rounded-[32px]">
           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-slate-50 via-white to-slate-100" />
           <div className="relative px-6 pt-6">
             <DialogHeader>
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <div>
                   <DialogTitle className="text-xl font-semibold">
                     Add Candidate
@@ -378,12 +378,12 @@ export function CreateCandidate({ orgId }: { orgId: string }) {
               </div>
             </DialogHeader>
 
-            <div className="mt-4 flex items-center gap-2">
-              <div className="h-2 flex-1 rounded-full bg-slate-100">
-                <div className="h-2 w-20 rounded-full bg-slate-900" />
+              <div className="mt-4 flex items-center gap-2">
+                <div className="h-2 flex-1 rounded-full bg-slate-100">
+                  <div className="h-2 w-20 rounded-full bg-slate-900" />
+                </div>
+                <span className="text-xs text-muted-foreground">Personal</span>
               </div>
-              <span className="text-xs text-muted-foreground">Personal</span>
-            </div>
           </div>
 
           <div className="space-y-5 px-6 pb-6 pt-6 max-h-[70vh] overflow-y-auto inner-scroll pr-2">
@@ -972,7 +972,7 @@ export function CreateCandidate({ orgId }: { orgId: string }) {
               ) : null}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
               <Button
                 variant="ghost"
                 className="rounded-2xl"

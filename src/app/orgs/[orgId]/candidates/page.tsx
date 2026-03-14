@@ -46,7 +46,7 @@ export default async function CandidatesPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground">
             <Users className="h-3.5 w-3.5" />
@@ -64,7 +64,7 @@ export default async function CandidatesPage({
       </div>
 
       <Card className="premium-block rounded-3xl border bg-card/50 p-6 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm text-muted-foreground">Total</div>
             <div className="mt-1 text-lg font-semibold">
@@ -78,7 +78,7 @@ export default async function CandidatesPage({
 
         <Separator className="my-4" />
 
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CandidateSearch initialQuery={q} />
           {q ? (
             <div className="text-sm text-muted-foreground">
@@ -100,7 +100,7 @@ export default async function CandidatesPage({
                 key={c.id}
                 className="premium-subblock group rounded-2xl border bg-background/40 p-4 transition hover:bg-accent/40"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="text-base font-semibold">{c.fullName}</div>
                     <div className="mt-1 text-sm text-muted-foreground">
@@ -110,7 +110,7 @@ export default async function CandidatesPage({
 
                   <Link
                     href={`/orgs/${orgId}/candidates/${c.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-sm hover:bg-accent/60 transition"
+                    className="inline-flex w-full items-center justify-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-sm transition hover:bg-accent/60 sm:w-auto"
                   >
                     View <ArrowUpRight className="h-4 w-4" />
                   </Link>

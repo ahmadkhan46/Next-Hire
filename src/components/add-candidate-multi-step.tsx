@@ -271,7 +271,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                   <Label className="text-sm text-muted-foreground">Full Name *</Label>
                   <Input className="mt-2 rounded-2xl" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm text-muted-foreground">Email *</Label>
                     <Input className="mt-2 rounded-2xl" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
@@ -285,7 +285,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                   <Label className="text-sm text-muted-foreground">Location</Label>
                   <Input className="mt-2 rounded-2xl" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="San Francisco, CA" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm text-muted-foreground">Current Title</Label>
                     <Input className="mt-2 rounded-2xl" value={currentTitle} onChange={(e) => setCurrentTitle(e.target.value)} placeholder="Senior Developer" />
@@ -296,7 +296,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex flex-col-reverse justify-end gap-2 pt-4 sm:flex-row">
                 <Button className="rounded-2xl" onClick={handleNext} disabled={loading}>
                   Next <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -323,7 +323,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Company *</Label>
                   <Input value={expCompany} onChange={(e) => setExpCompany(e.target.value)} />
@@ -337,7 +337,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                 <Label>Location</Label>
                 <Input value={expLocation} onChange={(e) => setExpLocation(e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Start Date *</Label>
                   <Input type="date" value={expStart} onChange={(e) => setExpStart(e.target.value)} />
@@ -358,11 +358,11 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
               <Button onClick={addExperience} variant="outline" size="sm" className="rounded-2xl">
                 <Plus className="h-4 w-4 mr-2" /> Add Experience
               </Button>
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <Button variant="outline" className="rounded-2xl" onClick={() => setStep(0)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Button variant="outline" className="rounded-2xl" onClick={handleSkip}>
                     Skip
                   </Button>
@@ -405,7 +405,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                 <Label>Location</Label>
                 <Input value={eduLocation} onChange={(e) => setEduLocation(e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Start Year</Label>
                   <Input type="number" value={eduStart} onChange={(e) => setEduStart(e.target.value)} />
@@ -418,11 +418,11 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
               <Button onClick={addEducation} variant="outline" size="sm" className="rounded-2xl">
                 <Plus className="h-4 w-4 mr-2" /> Add Education
               </Button>
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <Button variant="outline" className="rounded-2xl" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Button variant="outline" className="rounded-2xl" onClick={handleSkip}>
                     Skip
                   </Button>
@@ -445,11 +445,11 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                   rows={4}
                 />
               </div>
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <Button variant="outline" className="rounded-2xl" onClick={() => setStep(2)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Button variant="outline" className="rounded-2xl" onClick={handleSkip}>
                     Skip
                   </Button>
@@ -484,7 +484,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
                 <Label>Project Title *</Label>
                 <Input value={projTitle} onChange={(e) => setProjTitle(e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Dates</Label>
                   <Input value={projDates} onChange={(e) => setProjDates(e.target.value)} placeholder="2023 - Present" />
@@ -505,11 +505,11 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
               <Button onClick={addProject} variant="outline" size="sm" className="rounded-2xl">
                 <Plus className="h-4 w-4 mr-2" /> Add Project
               </Button>
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <Button variant="outline" className="rounded-2xl" onClick={() => setStep(3)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Button variant="outline" className="rounded-2xl" onClick={handleFinish} disabled={loading}>
                     Skip & Finish
                   </Button>

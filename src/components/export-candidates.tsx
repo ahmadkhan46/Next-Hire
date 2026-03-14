@@ -302,7 +302,7 @@ export function ExportCandidates({ orgId }: { orgId: string }) {
                   />
                 </div>
 
-                <div className="mt-3 flex items-center justify-between rounded-xl border bg-white px-3 py-2">
+                <div className="mt-3 flex flex-col gap-2 rounded-xl border bg-white px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
                     <Checkbox checked={allVisibleSelected} onCheckedChange={toggleAllVisible} />
                     <span className="text-sm font-medium">
@@ -365,7 +365,7 @@ export function ExportCandidates({ orgId }: { orgId: string }) {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t px-6 py-4">
+          <div className="flex flex-col-reverse gap-2 border-t px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
             <Button variant="outline" onClick={() => setShowZipModal(false)} className="rounded-xl">
               Cancel
             </Button>

@@ -43,12 +43,12 @@ export default async function OrgDashboardPage({
     : null;
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="relative min-h-full overflow-hidden">
       <div className="prestige-bg" />
       <div className="prestige-grid" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1200px] px-6 py-12 space-y-12">
-        <div className="premium-block prestige-card rounded-[32px] p-10 md:p-12">
+      <div className="relative z-10 mx-auto w-full max-w-[1200px] space-y-8 px-3 py-6 sm:px-4 md:space-y-10 md:px-6 md:py-10">
+        <div className="premium-block prestige-card rounded-[32px] p-6 sm:p-8 md:p-10 lg:p-12">
           <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-3 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] prestige-pill">
@@ -56,12 +56,12 @@ export default async function OrgDashboardPage({
                 AI-POWERED INTELLIGENCE
               </div>
 
-              <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-6xl">
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl md:text-6xl">
                 Recruitment
                 <span className="block prestige-title">Intelligence</span>
               </h1>
 
-              <p className="max-w-2xl text-lg text-slate-600 leading-relaxed">
+              <p className="max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
                 A precise, elegant command center for hiring teams. Real-time analytics,
                 autonomous matching, and audit-ready compliance in one place.
               </p>
@@ -82,7 +82,7 @@ export default async function OrgDashboardPage({
               </div>
             </div>
 
-            <div className="flex items-start justify-end">
+            <div className="flex items-start justify-start lg:justify-end">
               <div className="prestige-surface rounded-3xl p-4">
                 <ExportAuditPanelClient orgId={orgId} />
               </div>
@@ -90,7 +90,7 @@ export default async function OrgDashboardPage({
           </div>
         </div>
 
-        <div id="analytics" className="premium-block prestige-card rounded-[28px] p-8 md:p-10">
+        <div id="analytics" className="premium-block prestige-card rounded-[28px] p-5 sm:p-6 md:p-8 lg:p-10">
           <div className="flex flex-wrap items-center gap-4 mb-8">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-900 text-white">
               <BarChart3 className="h-5 w-5" />
@@ -106,7 +106,7 @@ export default async function OrgDashboardPage({
           <AnalyticsDashboard orgId={orgId} />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
           <div className="premium-block prestige-card rounded-3xl p-7">
             <div className="flex items-center justify-between gap-6">
               <div>

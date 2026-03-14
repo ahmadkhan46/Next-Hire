@@ -295,7 +295,7 @@ export default async function CandidateDetailPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground">
             <User className="h-3.5 w-3.5" />
@@ -309,7 +309,7 @@ export default async function CandidateDetailPage({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
           <CandidateActions
             orgId={orgId}
             candidateId={candidateId}
@@ -317,7 +317,7 @@ export default async function CandidateDetailPage({
           />
           <Link
             href={`/orgs/${orgId}/candidates`}
-            className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60 sm:w-auto"
           >
             Back <ArrowUpRight className="h-4 w-4" />
           </Link>

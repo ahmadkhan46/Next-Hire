@@ -39,7 +39,7 @@ export default async function JobsPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground">
             <Briefcase className="h-3.5 w-3.5" />
@@ -53,7 +53,7 @@ export default async function JobsPage({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
           <Link
             href={`/orgs/${orgId}`}
             className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm hover:bg-accent/60 transition"
@@ -72,7 +72,7 @@ export default async function JobsPage({
       </div>
 
       <Card className="premium-block rounded-3xl border bg-card/50 p-6 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm text-muted-foreground">Total</div>
             <div className="mt-1 text-lg font-semibold">{jobs.length} jobs</div>
@@ -95,9 +95,9 @@ export default async function JobsPage({
                 key={j.id}
                 className="premium-subblock group rounded-2xl border bg-background/40 p-4 transition hover:bg-accent/40"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <div className="text-base font-semibold">{j.title}</div>
                       <Badge variant="secondary" className="rounded-full text-xs">
                         {j.status ?? "OPEN"}
@@ -113,16 +113,16 @@ export default async function JobsPage({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/orgs/${orgId}/jobs/${j.id}/skills`}
-                      className="inline-flex items-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-sm hover:bg-accent/60 transition"
+                      className="inline-flex w-full items-center justify-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-sm transition hover:bg-accent/60 sm:w-auto"
                     >
                       Edit <ArrowUpRight className="h-4 w-4" />
                     </Link>
                     <Link
                       href={`/orgs/${orgId}/matchboard?jobId=${j.id}`}
-                      className="inline-flex items-center gap-1 rounded-full border bg-card/60 px-3 py-1 text-sm hover:bg-accent/60 transition"
+                      className="inline-flex w-full items-center justify-center gap-1 rounded-full border bg-card/60 px-3 py-1 text-sm transition hover:bg-accent/60 sm:w-auto"
                     >
                       Matchboard <ArrowUpRight className="h-4 w-4" />
                     </Link>

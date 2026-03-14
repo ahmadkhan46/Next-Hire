@@ -46,6 +46,40 @@ export function Navigation() {
   const orgMatch = pathname?.match(/^\/orgs\/([^/]+)/);
   const orgId = orgMatch?.[1];
   const activeSection = getActiveSection(pathname, orgId);
+  const orgLinks = orgId
+    ? [
+        {
+          href: `/orgs/${orgId}`,
+          label: "Dashboard",
+          icon: BarChart3,
+          active: activeSection === "dashboard",
+        },
+        {
+          href: `/orgs/${orgId}/candidates`,
+          label: "Candidates",
+          icon: Users,
+          active: activeSection === "candidates",
+        },
+        {
+          href: `/orgs/${orgId}/jobs`,
+          label: "Jobs",
+          icon: Briefcase,
+          active: activeSection === "jobs",
+        },
+        {
+          href: `/orgs/${orgId}/intelligence`,
+          label: "Intelligence",
+          icon: Brain,
+          active: activeSection === "intelligence",
+        },
+        {
+          href: `/orgs/${orgId}/settings`,
+          label: "Settings",
+          icon: Settings,
+          active: activeSection === "settings",
+        },
+      ]
+    : [];
 
   const navLinkClass = (active: boolean) =>
     cn(
@@ -60,9 +94,9 @@ export function Navigation() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto max-w-[1400px] px-6">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+        <div className="flex min-h-16 flex-col justify-center gap-3 py-3 md:h-16 md:flex-row md:items-center md:justify-between md:gap-6 md:py-0">
+          <div className="flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2">
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-slate-900 text-white">
                 <Sparkles className="h-4 w-4" />
@@ -70,55 +104,46 @@ export function Navigation() {
               <span className="text-lg font-black text-slate-900">NextHire</span>
             </Link>
 
-            {orgId && (
-              <div className="hidden md:flex items-center gap-1">
-              <Link
-                href={`/orgs/${orgId}`}
-                className={navLinkClass(activeSection === "dashboard")}
-                aria-current={activeSection === "dashboard" ? "page" : undefined}
-              >
-                <BarChart3 className={navIconClass(activeSection === "dashboard")} />
-                Dashboard
-              </Link>
-              <Link
-                href={`/orgs/${orgId}/candidates`}
-                className={navLinkClass(activeSection === "candidates")}
-                aria-current={activeSection === "candidates" ? "page" : undefined}
-              >
-                <Users className={navIconClass(activeSection === "candidates")} />
-                Candidates
-              </Link>
-              <Link
-                href={`/orgs/${orgId}/jobs`}
-                className={navLinkClass(activeSection === "jobs")}
-                aria-current={activeSection === "jobs" ? "page" : undefined}
-              >
-                <Briefcase className={navIconClass(activeSection === "jobs")} />
-                Jobs
-              </Link>
-              <Link
-                href={`/orgs/${orgId}/intelligence`}
-                className={navLinkClass(activeSection === "intelligence")}
-                aria-current={activeSection === "intelligence" ? "page" : undefined}
-              >
-                <Brain className={navIconClass(activeSection === "intelligence")} />
-                Intelligence
-              </Link>
-              <Link
-                href={`/orgs/${orgId}/settings`}
-                className={navLinkClass(activeSection === "settings")}
-                aria-current={activeSection === "settings" ? "page" : undefined}
-              >
-                <Settings className={navIconClass(activeSection === "settings")} />
-                Settings
-              </Link>
-              </div>
-            )}
+            <div className="flex items-center gap-3 md:hidden">
+              <SignedIn>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "h-9 w-9",
+                    },
+                  }}
+                />
+              </SignedIn>
+              <SignedOut>
+                <Link
+                  href="/sign-in"
+                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                >
+                  Sign In
+                </Link>
+              </SignedOut>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          {orgLinks.length > 0 ? (
+            <div className="hidden flex-1 items-center gap-1 md:flex">
+              {orgLinks.map(({ href, label, icon: Icon, active }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={navLinkClass(active)}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <Icon className={navIconClass(active)} />
+                  {label}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="hidden items-center gap-4 md:flex">
             <SignedIn>
-              <div className="hidden md:block text-sm text-slate-600">
+              <div className="hidden text-sm text-slate-600 lg:block">
                 {user?.emailAddresses[0]?.emailAddress}
               </div>
               <UserButton
@@ -132,13 +157,29 @@ export function Navigation() {
             <SignedOut>
               <Link
                 href="/sign-in"
-                className="px-4 py-2 text-sm font-semibold text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
               >
                 Sign In
               </Link>
             </SignedOut>
           </div>
         </div>
+
+        {orgLinks.length > 0 ? (
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 inner-scroll md:hidden">
+            {orgLinks.map(({ href, label, icon: Icon, active }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(navLinkClass(active), "shrink-0 whitespace-nowrap")}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon className={navIconClass(active)} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
     </nav>
   );

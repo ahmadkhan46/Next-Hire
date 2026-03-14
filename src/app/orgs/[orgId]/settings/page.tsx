@@ -32,7 +32,7 @@ export default async function SettingsPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground">
             <Settings className="h-3.5 w-3.5" />
@@ -48,7 +48,7 @@ export default async function SettingsPage({
       </div>
 
       <div className="premium-block rounded-3xl border bg-card/50 p-6 shadow-sm space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm text-muted-foreground">Organization</div>
             <div className="mt-1 text-lg font-semibold">{org.name}</div>

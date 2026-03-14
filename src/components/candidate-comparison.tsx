@@ -85,7 +85,7 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
 
         {!selectedCandidate ? (
           <div className="space-y-4">
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 placeholder="Search candidates by name or email..."
                 value={search}
@@ -115,7 +115,7 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">Comparing with</div>
               <Button
                 variant="outline"
@@ -128,7 +128,7 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
             </div>
 
             {/* Header Comparison */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="premium-subblock rounded-2xl border bg-white/70 p-4">
                 <div className="font-semibold">{currentCandidate.fullName}</div>
                 <div className="text-sm text-muted-foreground mt-1">
@@ -155,7 +155,7 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
             {/* Experience Comparison */}
             <div>
               <h4 className="font-semibold mb-3">Experience</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="text-center p-4 rounded-2xl border">
                   <div className="text-2xl font-bold">
                     {currentCandidate.yearsOfExperience || 0}
@@ -185,7 +185,7 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
             {/* Profile Completeness */}
             <div>
               <h4 className="font-semibold mb-3">Profile depth</h4>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border p-3 text-center">
                   <div className="text-xs text-muted-foreground">Experience</div>
                   <div className="mt-1 text-lg font-semibold">
@@ -270,7 +270,7 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
             {/* Match Score Comparison */}
             <div>
               <h4 className="font-semibold mb-3">Average Match Score</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="text-center p-4 rounded-2xl border">
                   <div className="text-2xl font-bold">
                     {Math.round(currentCandidate.avgMatchScore * 100)}%
