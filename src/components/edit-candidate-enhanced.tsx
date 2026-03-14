@@ -367,7 +367,7 @@ export function EditCandidateEnhanced({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200/80 shadow-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto inner-scroll rounded-3xl border border-slate-200/80 shadow-2xl">
         <DialogHeader>
           <DialogTitle>Edit Candidate Profile</DialogTitle>
         </DialogHeader>
@@ -706,3 +706,4 @@ export function EditCandidateEnhanced({
     </Dialog>
   );
 }
+

@@ -45,7 +45,7 @@ export function SkillsAnalysisPanel({ skillsGaps }: { skillsGaps: SkillGap[] }) 
 
       {visible ? (
         <div className="mt-6 space-y-4">
-          <div className="h-[13rem] snap-y snap-mandatory overflow-y-auto pr-2 scroll-smooth overscroll-contain">
+          <div className="h-[13rem] snap-y snap-mandatory overflow-y-auto inner-scroll pr-2 scroll-smooth overscroll-contain">
             <div className="space-y-4">
               {rows.map((row, rowIndex) => (
                 <div
@@ -76,3 +76,4 @@ export function SkillsAnalysisPanel({ skillsGaps }: { skillsGaps: SkillGap[] }) 
     </div>
   );
 }
+

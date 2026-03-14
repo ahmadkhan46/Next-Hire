@@ -317,7 +317,7 @@ export function ExportCandidates({ orgId }: { orgId: string }) {
                     <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
                 ) : (
-                  <div className="mt-3 max-h-[320px] space-y-2 overflow-y-auto pr-1">
+                  <div className="mt-3 max-h-[320px] space-y-2 overflow-y-auto inner-scroll pr-1">
                     {filteredCandidates.map((candidate) => (
                       <div
                         key={candidate.id}
@@ -391,3 +391,4 @@ export function ExportCandidates({ orgId }: { orgId: string }) {
     </>
   );
 }
+

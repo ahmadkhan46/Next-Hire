@@ -1,3 +1,6 @@
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
 type PDFPage = {
   getTextContent: (options?: { disableNormalization?: boolean }) => Promise<{
     items: Array<{ str?: string; hasEOL?: boolean }>;
@@ -12,6 +15,9 @@ type PDFDocument = {
 };
 
 type PDFJSRuntime = {
+  GlobalWorkerOptions: {
+    workerSrc: string;
+  };
   getDocument: (options: {
     data: Uint8Array;
     useWorkerFetch?: boolean;
@@ -33,6 +39,17 @@ async function getPdfjs(): Promise<PDFJSRuntime> {
   const resolved = mod as unknown as PDFJSRuntime;
   if (typeof resolved.getDocument !== "function") {
     throw new Error("pdfjs runtime is unavailable");
+  }
+  if (resolved.GlobalWorkerOptions) {
+    const workerPath = path.join(
+      process.cwd(),
+      "node_modules",
+      "pdfjs-dist",
+      "legacy",
+      "build",
+      "pdf.worker.mjs"
+    );
+    resolved.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).toString();
   }
   pdfjsModule = resolved;
   return pdfjsModule;
@@ -112,4 +129,3 @@ export async function extractTextFromFile(
 
   throw new Error("Unsupported file type");
 }
-

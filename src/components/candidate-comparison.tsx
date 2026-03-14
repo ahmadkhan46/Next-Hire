@@ -78,7 +78,7 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto inner-scroll rounded-3xl">
         <DialogHeader>
           <DialogTitle>Compare Candidates</DialogTitle>
         </DialogHeader>
@@ -295,3 +295,4 @@ export function CandidateComparison({ orgId, currentCandidate }: CandidateCompar
     </Dialog>
   );
 }
+

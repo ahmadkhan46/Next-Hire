@@ -349,11 +349,12 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
           Resume Upload
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg rounded-3xl">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[calc(100vh-6rem)] max-w-lg flex-col overflow-hidden rounded-3xl p-0">
+        <DialogHeader className="shrink-0 px-6 pt-6">
           <DialogTitle className="text-lg">Upload resumes</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto inner-scroll px-6 pb-6 pr-4">
+          <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Upload PDF, DOCX files, or a ZIP archive containing resumes (max 5MB per file).
           </p>
@@ -470,7 +471,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                   </div>
                 ) : null}
               </div>
-              <div className="max-h-48 overflow-y-auto rounded-2xl border bg-background/40 p-3 text-xs">
+              <div className="max-h-48 overflow-y-auto inner-scroll rounded-2xl border bg-background/40 p-3 text-xs">
                 <div className="grid grid-cols-[1.5fr_0.8fr_2fr] gap-2 font-semibold text-muted-foreground">
                   <span>File</span>
                   <span>Status</span>
@@ -528,9 +529,9 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                 No upload history yet.
               </div>
             ) : (
-              <div className="max-h-56 space-y-2 overflow-y-auto rounded-2xl border bg-background/40 p-3 text-xs">
+              <div className="max-h-[11.5rem] space-y-2 overflow-y-auto inner-scroll rounded-2xl border bg-background/40 p-3 text-xs snap-y snap-mandatory">
                 {history.map((batch) => (
-                  <details key={batch.id} className="rounded-xl border bg-white/70 p-2">
+                  <details key={batch.id} className="snap-start rounded-xl border bg-white/70 p-2">
                     <summary className="cursor-pointer list-none">
                       {(() => {
                         const counts = getBatchCounts(batch.items);
@@ -585,9 +586,11 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
               </div>
             )}
           </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
 

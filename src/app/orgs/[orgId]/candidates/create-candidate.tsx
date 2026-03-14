@@ -386,7 +386,7 @@ export function CreateCandidate({ orgId }: { orgId: string }) {
             </div>
           </div>
 
-          <div className="space-y-5 px-6 pb-6 pt-6 max-h-[70vh] overflow-y-auto pr-2">
+          <div className="space-y-5 px-6 pb-6 pt-6 max-h-[70vh] overflow-y-auto inner-scroll pr-2">
             <div>
               <div className="text-sm text-muted-foreground">Full name *</div>
               <Input
@@ -990,3 +990,4 @@ export function CreateCandidate({ orgId }: { orgId: string }) {
     </Dialog>
   );
 }
+

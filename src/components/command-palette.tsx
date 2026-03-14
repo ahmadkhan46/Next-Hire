@@ -130,7 +130,7 @@ export function CommandPalette({
           />
         </div>
 
-        <div className="max-h-[400px] overflow-y-auto p-2">
+        <div className="max-h-[400px] overflow-y-auto inner-scroll p-2">
           {!query.trim() ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               Type to search candidates, jobs, or pages
@@ -196,3 +196,4 @@ export function CommandPalette({
     </Dialog>
   );
 }
+

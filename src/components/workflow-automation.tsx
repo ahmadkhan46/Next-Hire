@@ -93,7 +93,7 @@ export function WorkflowAutomation({ jobId }: { jobId: string }) {
             </Card>
 
             {applied.results.length > 0 && (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-2 max-h-60 overflow-y-auto inner-scroll">
                 {applied.results.map((result, i) => (
                   <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
@@ -128,7 +128,7 @@ export function WorkflowAutomation({ jobId }: { jobId: string }) {
             </Card>
 
             {preview.results.length > 0 ? (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-2 max-h-60 overflow-y-auto inner-scroll">
                 {preview.results.map((result, i) => (
                   <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>

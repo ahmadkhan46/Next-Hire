@@ -125,6 +125,37 @@
   }
 }
 
+@layer utilities {
+  .inner-scroll {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.7) transparent;
+    overscroll-behavior: contain;
+  }
+
+  .inner-scroll::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  .inner-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 9999px;
+  }
+
+  .inner-scroll::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background: rgba(100, 116, 139, 0.65);
+    background-clip: padding-box;
+  }
+
+  .inner-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(71, 85, 105, 0.8);
+    background-clip: padding-box;
+  }
+}
+
 /* Professional gradients and effects */
 .gradient-bg {
   background: linear-gradient(135deg, 

@@ -256,7 +256,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
                 </div>
               ) : null}
               {locationSuggestions.length > 0 ? (
-                <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border bg-background p-1 shadow-sm">
+                <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto inner-scroll rounded-xl border bg-background p-1 shadow-sm">
                   {locationSuggestions.map((item) => (
                     <button
                       key={`${item.type}-${item.value}`}
@@ -328,7 +328,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
                   <div className="mt-1 text-xs text-muted-foreground">Loading suggestions...</div>
                 ) : null}
                 {suggestions.length > 0 ? (
-                  <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border bg-background p-1 shadow-sm">
+                  <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto inner-scroll rounded-xl border bg-background p-1 shadow-sm">
                     {suggestions.map((item) => (
                       <button
                         key={`${item.name}-${item.source}`}
@@ -413,3 +413,4 @@ export function CreateJob({ orgId }: { orgId: string }) {
     </Dialog>
   );
 }
+

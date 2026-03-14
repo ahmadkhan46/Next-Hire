@@ -170,7 +170,7 @@ export function NotificationBell({ orgId }: { orgId: string }) {
           ) : null}
         </div>
 
-        <div className="max-h-[420px] overflow-y-auto p-2">
+        <div className="max-h-[420px] overflow-y-auto inner-scroll p-2">
           {initialLoading ? (
             <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
               Loading notifications...
@@ -223,3 +223,4 @@ export function NotificationBell({ orgId }: { orgId: string }) {
     </DropdownMenu>
   );
 }
+

@@ -193,7 +193,7 @@ export function SimilarCandidatesPanel({
               <div className="mb-2 text-xs text-muted-foreground">
                 More similar candidates ({overflowItems.length})
               </div>
-              <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
+              <div className="max-h-80 space-y-3 overflow-y-auto inner-scroll pr-1">
                 {overflowItems.map((item) => {
                   const selected = selectedIds.includes(item.id);
                   return (
@@ -323,3 +323,4 @@ export function SimilarCandidatesPanel({
     </Card>
   );
 }
+

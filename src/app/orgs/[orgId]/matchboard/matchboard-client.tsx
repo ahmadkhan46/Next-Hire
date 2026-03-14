@@ -504,7 +504,7 @@ export function MatchboardClient({
           No candidates meet the current threshold. Try lowering it or re-running the match.
         </div>
       ) : (
-        <div className="h-[24rem] space-y-3 overflow-y-auto pr-2">
+        <div className="h-[24rem] space-y-3 overflow-y-auto inner-scroll pr-2">
           {filtered.map((m) => {
             const scorePct = Math.round((m.score ?? 0) * 100);
             const missingCount = m.missing?.length ?? 0;
@@ -642,7 +642,7 @@ export function MatchboardClient({
       </Dialog>
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-2xl rounded-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl rounded-3xl max-h-[85vh] overflow-y-auto inner-scroll">
           <DialogHeader>
             <DialogTitle className="text-xl">
               {selected?.fullName ?? "Candidate"}
@@ -767,3 +767,4 @@ export function MatchboardClient({
     </Card>
   );
 }
+

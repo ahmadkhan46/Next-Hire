@@ -166,7 +166,7 @@ export function JobDetailsForm({
               </div>
             ) : null}
             {locationSuggestions.length > 0 ? (
-              <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border bg-background p-1 shadow-sm">
+              <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto inner-scroll rounded-xl border bg-background p-1 shadow-sm">
                 {locationSuggestions.map((item) => (
                   <button
                     key={`${item.type}-${item.value}`}
@@ -245,3 +245,4 @@ export function JobDetailsForm({
     </Card>
   );
 }
+

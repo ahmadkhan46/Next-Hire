@@ -248,7 +248,7 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
           <Plus className="h-4 w-4" /> Add Candidate
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto inner-scroll rounded-3xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">Add Candidate - {STEPS[step]}</DialogTitle>
           <div className="flex gap-2 mt-4">
@@ -525,3 +525,4 @@ export function AddCandidateMultiStep({ orgId }: { orgId: string }) {
     </Dialog>
   );
 }
+

@@ -179,7 +179,7 @@ export function Topbar({ orgId }: { orgId: string }) {
           </button>
 
           {showResults && (
-            <div className="absolute top-full z-50 mt-2 max-h-[420px] w-full overflow-y-auto rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_28px_80px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
+            <div className="absolute top-full z-50 mt-2 max-h-[420px] w-full overflow-y-auto inner-scroll rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_28px_80px_-40px_rgba(15,23,42,0.45)] backdrop-blur">
               {loading && (
                 <div className="px-3 py-3 text-sm text-muted-foreground">
                   Searching...
@@ -296,3 +296,4 @@ export function Topbar({ orgId }: { orgId: string }) {
     </header>
   );
 }
+
