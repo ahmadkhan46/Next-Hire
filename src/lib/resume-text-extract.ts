@@ -1,42 +1,41 @@
-import path from "node:path";
-import { createRequire } from "node:module";
-import { pathToFileURL } from "node:url";
+type PDFPage = {
+  getTextContent: (options?: { disableNormalization?: boolean }) => Promise<{
+    items: Array<{ str?: string; hasEOL?: boolean }>;
+  }>;
+  cleanup: () => void;
+};
 
-let workerConfigured = false;
-let pdfRuntimeInitialized = false;
-type PDFParseConstructor = new (options: { data: Buffer }) => {
-  getText: () => Promise<{ text?: string | null }>;
+type PDFDocument = {
+  numPages: number;
+  getPage: (pageNumber: number) => Promise<PDFPage>;
   destroy: () => Promise<void>;
+};
+
+type PDFJSRuntime = {
+  getDocument: (options: {
+    data: Uint8Array;
+    useWorkerFetch?: boolean;
+    isEvalSupported?: boolean;
+    useSystemFonts?: boolean;
+  }) => { promise: Promise<PDFDocument>; destroy?: () => void };
 };
 
 type MammothRuntime = {
   extractRawText: (input: { buffer: Buffer }) => Promise<{ value?: string | null }>;
 };
 
-let PDFParseCtor: PDFParseConstructor | null = null;
+let pdfjsModule: PDFJSRuntime | null = null;
 let mammothModule: MammothRuntime | null = null;
-const require = createRequire(import.meta.url);
 
-function ensurePdfRuntime() {
-  if (pdfRuntimeInitialized) return;
-  // `pdf-parse/worker` installs the Node-only canvas/DOM polyfills
-  // required by pdf.js before the parser module is loaded.
-  require("pdf-parse/worker");
-  pdfRuntimeInitialized = true;
-}
-
-async function getPDFParseCtor(): Promise<PDFParseConstructor> {
-  if (PDFParseCtor) return PDFParseCtor;
-  ensurePdfRuntime();
-  const mod = require("pdf-parse");
-  const resolved = ((mod as any).PDFParse ?? (mod as any).default?.PDFParse) as
-    | PDFParseConstructor
-    | undefined;
-  if (!resolved) {
-    throw new Error("pdf-parse runtime is unavailable");
+async function getPdfjs(): Promise<PDFJSRuntime> {
+  if (pdfjsModule) return pdfjsModule;
+  const mod = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const resolved = mod as unknown as PDFJSRuntime;
+  if (typeof resolved.getDocument !== "function") {
+    throw new Error("pdfjs runtime is unavailable");
   }
-  PDFParseCtor = resolved;
-  return PDFParseCtor;
+  pdfjsModule = resolved;
+  return pdfjsModule;
 }
 
 async function getMammoth(): Promise<MammothRuntime> {
@@ -52,26 +51,45 @@ async function getMammoth(): Promise<MammothRuntime> {
   return mammothModule;
 }
 
-async function ensurePdfWorker() {
-  if (workerConfigured) return;
+async function extractTextFromPdf(buffer: Buffer): Promise<string> {
+  const pdfjs = await getPdfjs();
+  const loadingTask = pdfjs.getDocument({
+    data: new Uint8Array(buffer),
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    useSystemFonts: false,
+  });
+
+  const doc = await loadingTask.promise;
+  const pageTexts: string[] = [];
+
   try {
-    const PDFParse = await getPDFParseCtor();
-    const workerPath = path.join(
-      process.cwd(),
-      "node_modules",
-      "pdfjs-dist",
-      "legacy",
-      "build",
-      "pdf.worker.mjs"
-    );
-    if (typeof (PDFParse as any).setWorker === "function") {
-      (PDFParse as any).setWorker(pathToFileURL(workerPath).toString());
+    for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
+      const page = await doc.getPage(pageNumber);
+      try {
+        const content = await page.getTextContent({ disableNormalization: false });
+        const parts: string[] = [];
+        for (const item of content.items) {
+          if (typeof item.str === "string" && item.str.length > 0) {
+            parts.push(item.str);
+          }
+          if (item.hasEOL) {
+            parts.push("\n");
+          }
+        }
+        pageTexts.push(parts.join(" ").replace(/[ \t]+\n/g, "\n").trim());
+      } finally {
+        page.cleanup();
+      }
     }
-  } catch {
-    // If worker setup fails, pdf.js will fall back to fake worker.
   } finally {
-    workerConfigured = true;
+    await doc.destroy();
+    if (typeof loadingTask.destroy === "function") {
+      loadingTask.destroy();
+    }
   }
+
+  return pageTexts.filter(Boolean).join("\n\n").trim();
 }
 
 export async function extractTextFromFile(
@@ -80,15 +98,7 @@ export async function extractTextFromFile(
   buffer: Buffer
 ) {
   if (mimeType === "application/pdf" || fileName.toLowerCase().endsWith(".pdf")) {
-    const PDFParse = await getPDFParseCtor();
-    await ensurePdfWorker();
-    const parser = new PDFParse({ data: buffer });
-    try {
-      const parsed = await parser.getText();
-      return parsed.text ?? "";
-    } finally {
-      await parser.destroy();
-    }
+    return extractTextFromPdf(buffer);
   }
 
   if (
@@ -102,3 +112,4 @@ export async function extractTextFromFile(
 
   throw new Error("Unsupported file type");
 }
+
