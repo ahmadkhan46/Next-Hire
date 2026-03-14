@@ -1,7 +1,9 @@
 import path from "node:path";
+import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 
 let workerConfigured = false;
+let pdfRuntimeInitialized = false;
 type PDFParseConstructor = new (options: { data: Buffer }) => {
   getText: () => Promise<{ text?: string | null }>;
   destroy: () => Promise<void>;
@@ -13,10 +15,20 @@ type MammothRuntime = {
 
 let PDFParseCtor: PDFParseConstructor | null = null;
 let mammothModule: MammothRuntime | null = null;
+const require = createRequire(import.meta.url);
+
+function ensurePdfRuntime() {
+  if (pdfRuntimeInitialized) return;
+  // `pdf-parse/worker` installs the Node-only canvas/DOM polyfills
+  // required by pdf.js before the parser module is loaded.
+  require("pdf-parse/worker");
+  pdfRuntimeInitialized = true;
+}
 
 async function getPDFParseCtor(): Promise<PDFParseConstructor> {
   if (PDFParseCtor) return PDFParseCtor;
-  const mod = await import("pdf-parse");
+  ensurePdfRuntime();
+  const mod = require("pdf-parse");
   const resolved = ((mod as any).PDFParse ?? (mod as any).default?.PDFParse) as
     | PDFParseConstructor
     | undefined;
