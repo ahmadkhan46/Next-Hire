@@ -1,3 +1,5 @@
+import { createRequire } from "node:module";
+
 type PdfParseResult = {
   text?: string | null;
 };
@@ -19,10 +21,11 @@ type MammothRuntime = {
 
 let pdfParseModule: PdfParseRuntime | null = null;
 let mammothModule: MammothRuntime | null = null;
+const requireFromHere = createRequire(import.meta.url);
 
 async function getPdfParse(): Promise<PdfParseRuntime> {
   if (pdfParseModule) return pdfParseModule;
-  const mod = await import("pdf-parse");
+  const mod = requireFromHere("pdf-parse");
   const resolved = ((mod as any).PDFParse ? mod : (mod as any).default) as PdfParseRuntime | undefined;
   if (!resolved?.PDFParse) {
     throw new Error("pdf-parse runtime is unavailable");

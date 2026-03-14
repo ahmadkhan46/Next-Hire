@@ -150,35 +150,35 @@ export function CandidateMatchesPanel({
   }
 
   return (
-    <Card className="premium-block relative overflow-hidden rounded-3xl border border-slate-300 bg-gradient-to-br from-white via-white/90 to-slate-50 p-6 shadow-[0_26px_60px_-32px_rgba(15,23,42,0.4)]">
-      <div className="flex items-center justify-between gap-3">
+    <Card className="premium-block relative overflow-hidden rounded-3xl border border-slate-300 bg-gradient-to-br from-white via-white/90 to-slate-50 p-4 shadow-[0_26px_60px_-32px_rgba(15,23,42,0.4)] sm:p-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-900 text-white">
             <Briefcase className="h-5 w-5" />
           </div>
           <div>
-          <div className="text-sm text-muted-foreground">Matches</div>
-          <div className="text-lg font-semibold">Recent opportunities</div>
-        </div>
+            <div className="text-sm text-muted-foreground">Matches</div>
+            <div className="text-lg font-semibold">Recent opportunities</div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as "score_desc" | "updated_desc")}
-            className="h-9 rounded-full border border-slate-300 bg-white px-3 text-xs"
+            className="h-10 w-full min-w-0 rounded-full border border-slate-300 bg-white px-3 text-xs sm:h-9 sm:w-auto sm:min-w-[11rem]"
           >
             <option value="score_desc">Sort: Highest score</option>
             <option value="updated_desc">Sort: Latest update</option>
           </select>
 
-          <div className="inline-flex items-center gap-1 rounded-full border border-slate-300/80 bg-white/80 p-1">
+          <div className="grid w-full grid-cols-3 gap-1 rounded-2xl border border-slate-300/80 bg-white/80 p-1 sm:inline-flex sm:w-auto sm:items-center sm:rounded-full">
             {(["ALL", "OPEN", "CLOSED"] as const).map((filterValue) => (
               <button
                 key={filterValue}
                 type="button"
                 onClick={() => setJobFilter(filterValue)}
-                className={`rounded-full px-3 py-1 text-xs transition ${
+                className={`rounded-full px-3 py-2 text-xs transition sm:py-1 ${
                   jobFilter === filterValue
                     ? "bg-slate-900 text-white"
                     : "text-slate-600 hover:bg-slate-100"
@@ -206,10 +206,11 @@ export function CandidateMatchesPanel({
           {filtered.map((m) => (
             <div
               key={m.id}
-              className="premium-subblock relative overflow-hidden flex items-center justify-between gap-4 rounded-2xl border border-slate-300/80 bg-white/70 p-4 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)]"
+              className="premium-subblock relative overflow-hidden rounded-2xl border border-slate-300/80 bg-white/70 p-4 shadow-[0_18px_30px_-30px_rgba(15,23,42,0.35)]"
             >
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                   <div className="text-sm font-semibold">
                     {m.job?.title ?? "Untitled job"}
                   </div>
@@ -224,65 +225,71 @@ export function CandidateMatchesPanel({
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="rounded-full">
-                  {Math.round((m.score ?? 0) * 100)}%
-                </Badge>
-                <Badge
-                  variant={
-                    m.status === "SHORTLISTED"
-                      ? "secondary"
-                      : m.status === "REJECTED"
-                      ? "destructive"
-                      : "outline"
-                  }
-                  className="rounded-full"
-                >
-                  {m.status}
-                </Badge>
-                <Badge
-                  variant={m.job?.status === "OPEN" ? "secondary" : "outline"}
-                  className="rounded-full"
-                >
-                  {m.job?.status ?? "UNKNOWN"}
-                </Badge>
-                <button
-                  type="button"
-                  onClick={() => updateMatchStatus(m, "SHORTLISTED")}
-                  disabled={
-                    !m.job?.id ||
-                    m.status === "SHORTLISTED" ||
-                    m.job?.status !== "OPEN" ||
-                    updatingKey === `${m.id}:SHORTLISTED`
-                  }
-                  className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {updatingKey === `${m.id}:SHORTLISTED` ? "Saving..." : "Shortlist"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateMatchStatus(m, "REJECTED")}
-                  disabled={!m.job?.id || m.status === "REJECTED" || updatingKey === `${m.id}:REJECTED`}
-                  className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {updatingKey === `${m.id}:REJECTED` ? "Saving..." : "Reject"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateMatchStatus(m, "NONE")}
-                  disabled={!m.job?.id || m.status === "NONE" || updatingKey === `${m.id}:NONE`}
-                  className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {updatingKey === `${m.id}:NONE` ? "Saving..." : "Reset"}
-                </button>
-                {m.job?.id ? (
-                  <Link
-                    href={`/orgs/${orgId}/matchboard?jobId=${m.job.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-xs hover:bg-accent/60 transition"
-                  >
-                    View <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Link>
-                ) : null}
+                <div className="flex flex-col gap-3 xl:items-end">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="rounded-full">
+                      {Math.round((m.score ?? 0) * 100)}%
+                    </Badge>
+                    <Badge
+                      variant={
+                        m.status === "SHORTLISTED"
+                          ? "secondary"
+                          : m.status === "REJECTED"
+                          ? "destructive"
+                          : "outline"
+                      }
+                      className="rounded-full"
+                    >
+                      {m.status}
+                    </Badge>
+                    <Badge
+                      variant={m.job?.status === "OPEN" ? "secondary" : "outline"}
+                      className="rounded-full"
+                    >
+                      {m.job?.status ?? "UNKNOWN"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateMatchStatus(m, "SHORTLISTED")}
+                      disabled={
+                        !m.job?.id ||
+                        m.status === "SHORTLISTED" ||
+                        m.job?.status !== "OPEN" ||
+                        updatingKey === `${m.id}:SHORTLISTED`
+                      }
+                      className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {updatingKey === `${m.id}:SHORTLISTED` ? "Saving..." : "Shortlist"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateMatchStatus(m, "REJECTED")}
+                      disabled={!m.job?.id || m.status === "REJECTED" || updatingKey === `${m.id}:REJECTED`}
+                      className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {updatingKey === `${m.id}:REJECTED` ? "Saving..." : "Reject"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateMatchStatus(m, "NONE")}
+                      disabled={!m.job?.id || m.status === "NONE" || updatingKey === `${m.id}:NONE`}
+                      className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {updatingKey === `${m.id}:NONE` ? "Saving..." : "Reset"}
+                    </button>
+                    {m.job?.id ? (
+                      <Link
+                        href={`/orgs/${orgId}/matchboard?jobId=${m.job.id}`}
+                        className="inline-flex items-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-xs transition hover:bg-accent/60"
+                      >
+                        View <ArrowUpRight className="h-3.5 w-3.5" />
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
