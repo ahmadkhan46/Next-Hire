@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { logLLMUsage } from './logger';
+import { logger, logLLMUsage } from './logger';
 import { sanitizeForLog } from './security';
 
 export interface LLMUsageRecord {
