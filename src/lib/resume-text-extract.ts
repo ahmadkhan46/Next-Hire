@@ -1,3 +1,7 @@
+import { existsSync } from "fs";
+import { resolve } from "path";
+import { pathToFileURL } from "url";
+
 type MammothRuntime = {
   extractRawText: (input: { buffer: Buffer }) => Promise<{ value?: string | null }>;
 };
@@ -70,20 +74,54 @@ function ensureDomGlobals() {
   }
 }
 
-let domGlobalsReady = false;
+let pdfParseReady = false;
+
+/**
+ * Returns the file:// URL for the pdfjs worker that is bundled inside
+ * pdf-parse's own node_modules. We must point to THIS worker (not the
+ * project-level pdfjs-dist worker) because:
+ *   - pdf-parse@2.x bundles pdfjs-dist@5.4.x (compatible with Node 20+)
+ *   - The project's pdfjs-dist@5.5.x requires Node 24+ (uses Promise.try)
+ *
+ * Falls back to the top-level pdfjs-dist worker in case npm hoisted the
+ * package to the root (versions match → deduplication).
+ */
+function getPdfWorkerSrc(): string {
+  const cwd = process.cwd();
+
+  // Primary: pdf-parse ships its own nested pdfjs-dist (v5.4.x).
+  const nested = resolve(
+    cwd,
+    "node_modules", "pdf-parse", "node_modules", "pdfjs-dist",
+    "legacy", "build", "pdf.worker.mjs"
+  );
+
+  // Fallback: if npm deduplication hoisted pdfjs-dist to the root.
+  const hoisted = resolve(
+    cwd,
+    "node_modules", "pdfjs-dist",
+    "legacy", "build", "pdf.worker.mjs"
+  );
+
+  return pathToFileURL(existsSync(nested) ? nested : hoisted).href;
+}
 
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  if (!domGlobalsReady) {
+  if (!pdfParseReady) {
     ensureDomGlobals();
-    domGlobalsReady = true;
+    pdfParseReady = true;
   }
-  // pdf-parse v2 exports a PDFParse class; the old v1 function-based API is gone.
-  // Must disable the web worker explicitly for Vercel serverless.
+
+  // pdf-parse v2 exports a PDFParse class (not the old v1 function).
   const { PDFParse } = await import("pdf-parse");
   if (typeof PDFParse !== "function") {
     throw new Error("pdf-parse runtime is unavailable");
   }
-  PDFParse.setWorker("");
+
+  // pdfjs v5 requires a real workerSrc file URL — an empty string causes
+  // "Setting up fake worker failed". Point to pdf-parse's bundled worker.
+  PDFParse.setWorker(getPdfWorkerSrc());
+
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
   const result = await parser.getText();
   return (result.text ?? "").trim();
