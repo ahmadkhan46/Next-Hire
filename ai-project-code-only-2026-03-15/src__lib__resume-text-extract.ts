@@ -77,15 +77,12 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
     ensureDomGlobals();
     domGlobalsReady = true;
   }
-  // pdf-parse v2 exports a PDFParse class; the old v1 function-based API is gone.
-  // Must disable the web worker explicitly for Vercel serverless.
-  const { PDFParse } = await import("pdf-parse");
-  if (typeof PDFParse !== "function") {
+  const mod = await import("pdf-parse");
+  const parse = (mod as any).default ?? mod;
+  if (typeof parse !== "function") {
     throw new Error("pdf-parse runtime is unavailable");
   }
-  PDFParse.setWorker("");
-  const parser = new PDFParse({ data: new Uint8Array(buffer) });
-  const result = await parser.getText();
+  const result = await parse(buffer);
   return (result.text ?? "").trim();
 }
 

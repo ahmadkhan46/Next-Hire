@@ -1,0 +1,639 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+enum WorkMode {
+  REMOTE
+  ONSITE
+  HYBRID
+  OTHER
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MatchStatus {
+  NONE
+  SHORTLISTED
+  REJECTED
+}
+
+enum ResumeParseStatus {
+  QUEUED
+  EXTRACTING
+  SAVED
+  NEEDS_REVIEW
+  FAILED
+}
+
+enum UploadSourceType {
+  CSV
+  ZIP
+  PDF_DOCX
+}
+
+enum UploadItemStatus {
+  PENDING
+  PROCESSING
+  CREATED
+  UPDATED
+  SKIPPED
+  FAILED
+}
+
+enum UploadBatchStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  PARTIAL_FAILED
+  FAILED
+}
+
+enum NotificationType {
+  UPLOAD_COMPLETE
+  UPLOAD_FAILED
+  MATCH_FOUND
+  RESUME_PARSED
+  JOB_CREATED
+  SYSTEM
+}
+
+enum CandidateActivityType {
+  PROFILE_UPDATED
+  RESUME_UPLOADED
+  RESUME_PARSED
+  RESUME_PARSE_FAILED
+  MATCH_STATUS_CHANGED
+  SKILL_ADDED
+  SKILL_REMOVED
+  EXPERIENCE_ADDED
+  EXPERIENCE_UPDATED
+  EXPERIENCE_REMOVED
+  EDUCATION_ADDED
+  EDUCATION_UPDATED
+  EDUCATION_REMOVED
+  PROJECT_ADDED
+  PROJECT_UPDATED
+  PROJECT_REMOVED
+  NOTE_ADDED
+  NOTE_UPDATED
+  NOTE_REMOVED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_UPDATED
+  INTERVIEW_COMPLETED
+  INTERVIEW_CANCELLED
+  COMMUNICATION_SENT
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum JobPageAuditAction {
+  JOB_DETAILS_UPDATED
+  JOB_SKILLS_UPDATED
+  JOB_SKILLS_GENERATED
+  JOB_MATCHING_RERUN
+  JOB_DELETED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   Membership[]
+  candidates    Candidate[]    @relation("UserCreatedCandidates")
+  notifications Notification[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships              Membership[]
+  candidates               Candidate[]
+  skills                   Skill[]
+  jobs                     Job[]
+  matches                  MatchResult[]
+  decisionLogs             MatchDecisionLog[]
+  uploadBatches            ResumeUploadBatch[]
+  notifications            Notification[]
+  candidateActivities      CandidateActivity[]
+  candidateNotes           CandidateNote[]
+  candidateTags            CandidateTag[]
+  interviews               CandidateInterview[]
+  jobSkillGenerationAudits JobSkillGenerationAudit[]
+  jobPageAuditEvents       JobPageAuditEvent[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  role      OrgRole  @default(MEMBER)
+  createdAt DateTime @default(now())
+
+  userId String
+  orgId  String
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+model Candidate {
+  id                String    @id @default(cuid())
+  fullName          String
+  email             String?
+  phone             String?
+  location          String?
+  currentTitle      String?
+  yearsOfExperience Int?
+  notes             String?
+  externalId        String?
+  dateOfBirth       DateTime?
+  fingerprint       String?
+  linkedinUrl       String?
+  githubUrl         String?
+  portfolioUrl      String?
+  status            String    @default("ACTIVE")
+  source            String?
+
+  // Legacy fields - derived from CandidateEducation[]
+  // TODO: Consider removing these in favor of educations relation
+  educationSchool String?
+  educationDegree String?
+  educationYear   Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  orgId     String
+  createdBy String?
+
+  org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdByUser User?        @relation("UserCreatedCandidates", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  resumes        Resume[]
+  skills         CandidateSkill[]
+  matches        MatchResult[]
+  decisionLogs   MatchDecisionLog[]
+  experiences    CandidateExperience[]
+  projects       CandidateProject[]
+  technologies   CandidateTechnology[]
+  educations     CandidateEducation[]
+  uploadItems    ResumeUploadItem[]
+  activities     CandidateActivity[]
+  candidateNotes CandidateNote[]
+  tags           CandidateTag[]        @relation("CandidateTags")
+  interviews     CandidateInterview[]
+
+  @@unique([orgId, externalId])
+  @@unique([orgId, fingerprint])
+  @@index([orgId])
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@index([orgId, email])
+  @@index([orgId, phone])
+  @@index([orgId, fullName])
+  @@index([orgId, status])
+  @@index([orgId, createdAt])
+}
+
+model CandidateActivity {
+  id          String                @id @default(cuid())
+  createdAt   DateTime              @default(now())
+  orgId       String
+  candidateId String
+  type        CandidateActivityType
+  title       String
+  description String?
+  metadata    Json?
+  actorId     String?
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  candidate Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+  @@index([candidateId, createdAt])
+}
+
+model CandidateNote {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orgId       String
+  candidateId String
+  content     String
+  isImportant Boolean  @default(false)
+  authorId    String?
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  candidate Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+  @@index([candidateId, createdAt])
+}
+
+model CandidateEducation {
+  id          String   @id @default(cuid())
+  candidateId String
+  school      String
+  degree      String?
+  location    String?
+  startYear   Int?
+  endYear     Int?
+  createdAt   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model CandidateExperience {
+  id          String    @id @default(cuid())
+  candidateId String
+  company     String
+  role        String
+  location    String?
+  startMonth  DateTime
+  endMonth    DateTime?
+  isCurrent   Boolean   @default(false)
+  bullets     String[]
+  createdAt   DateTime  @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model CandidateProject {
+  id          String   @id @default(cuid())
+  candidateId String
+  title       String
+  dates       String?
+  techStack   String?
+  link        String?
+  bullets     String[]
+  createdAt   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model CandidateTechnology {
+  id          String   @id @default(cuid())
+  candidateId String
+  category    String
+  items       String[]
+  createdAt   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Resume {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  // Store metadata now; file storage later (S3/R2/etc.)
+  fileName  String?
+  mimeType  String?
+  sizeBytes Int?
+
+  // Useful for AI pipeline
+  rawText       String?
+  parsedJson    Json?
+  parseStatus   ResumeParseStatus @default(QUEUED)
+  parseError    String?
+  parsedAt      DateTime?
+  parseModel    String?
+  promptVersion String?
+
+  // Semantic search embedding
+  embedding   Json?
+  uploadItems ResumeUploadItem[]
+
+  @@index([candidateId])
+}
+
+model ResumeUploadBatch {
+  id           String            @id @default(cuid())
+  orgId        String
+  targetJobId  String?
+  sourceType   UploadSourceType
+  sourceName   String?
+  uploadedBy   String?
+  status       UploadBatchStatus @default(QUEUED)
+  totalFiles   Int               @default(0)
+  processed    Int               @default(0)
+  createdCount Int               @default(0)
+  updatedCount Int               @default(0)
+  failedCount  Int               @default(0)
+  createdAt    DateTime          @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  org       Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  targetJob Job?               @relation("UploadBatchTargetJob", fields: [targetJobId], references: [id], onDelete: SetNull)
+  items     ResumeUploadItem[]
+
+  @@index([orgId, createdAt])
+  @@index([orgId, status, createdAt])
+  @@index([orgId, targetJobId, createdAt])
+}
+
+model ResumeUploadItem {
+  id          String           @id @default(cuid())
+  batchId     String
+  fileName    String
+  candidateId String?
+  resumeId    String?
+  status      UploadItemStatus
+  note        String?
+  error       String?
+  createdAt   DateTime         @default(now())
+
+  batch     ResumeUploadBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  candidate Candidate?        @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  resume    Resume?           @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@index([batchId, createdAt])
+  @@index([candidateId])
+  @@index([resumeId])
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  candidates CandidateSkill[]
+  jobSkills  JobSkill[]
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+model CandidateSkill {
+  id          String   @id @default(cuid())
+  candidateId String
+  skillId     String
+  level       Int? // optional 1-5
+  source      String? // e.g., "resume", "manual", "linkedin"
+  createdAt   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  skill     Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, skillId])
+  @@index([candidateId])
+  @@index([skillId])
+}
+
+model Job {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?
+  location      String?
+  status        JobStatus @default(OPEN)
+  workMode      WorkMode?
+  workModeOther String?
+
+  // Semantic search embedding
+  embedding Json?
+
+  skills                JobSkill[]
+  matches               MatchResult[]
+  decisionLogs          MatchDecisionLog[]
+  uploadBatches         ResumeUploadBatch[]       @relation("UploadBatchTargetJob")
+  skillGenerationAudits JobSkillGenerationAudit[]
+  pageAuditEvents       JobPageAuditEvent[]
+
+  @@index([orgId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([orgId, status])
+  @@index([orgId, createdAt])
+}
+
+model JobPageAuditEvent {
+  id        String             @id @default(cuid())
+  createdAt DateTime           @default(now())
+  orgId     String
+  jobId     String
+  action    JobPageAuditAction
+  actorId   String?
+  summary   String?
+  metadata  Json?
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  job Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+  @@index([jobId, createdAt])
+  @@index([jobId, action, createdAt])
+}
+
+model JobSkillGenerationAudit {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  orgId           String
+  jobId           String
+  triggeredBy     String?
+  source          String
+  onlyWhenEmpty   Boolean  @default(false)
+  maxSkills       Int?
+  generatedCount  Int      @default(0)
+  beforeSkills    Json
+  afterSkills     Json
+  generatedSkills Json
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  job Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+  @@index([jobId, createdAt])
+  @@index([source, createdAt])
+}
+
+model JobSkill {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  jobId   String
+  skillId String
+
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  weight Int? // optional importance 1-5
+
+  @@unique([jobId, skillId])
+  @@index([jobId])
+  @@index([skillId])
+}
+
+model MatchResult {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobId       String
+  candidateId String
+  orgId       String
+
+  score         Float
+  matched       Json
+  missing       Json
+  matchedWeight Int
+  totalWeight   Int
+
+  status          MatchStatus @default(NONE)
+  statusUpdatedAt DateTime?
+  statusUpdatedBy String?
+
+  job       Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, candidateId])
+  @@index([orgId])
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([createdAt])
+  @@index([orgId, status])
+  @@index([jobId, score])
+  @@index([candidateId, score])
+  @@index([jobId, createdAt])
+  @@index([orgId, createdAt])
+}
+
+model MatchDecisionLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  orgId       String
+  jobId       String
+  candidateId String
+
+  fromStatus MatchStatus
+  toStatus   MatchStatus
+  note       String?
+
+  // later when auth exists
+  decidedBy String?
+
+  job       Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([createdAt])
+  @@index([jobId, candidateId])
+  @@index([orgId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  orgId  String
+  userId String?
+
+  type    NotificationType
+  title   String
+  message String
+  link    String?
+
+  read   Boolean   @default(false)
+  readAt DateTime?
+
+  metadata Json?
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model CandidateTag {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#64748b")
+  orgId     String
+  createdAt DateTime @default(now())
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  candidates Candidate[]  @relation("CandidateTags")
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+model CandidateInterview {
+  id              String          @id @default(cuid())
+  orgId           String
+  candidateId     String
+  title           String
+  round           String?
+  scheduledAt     DateTime
+  durationMinutes Int             @default(45)
+  timezone        String          @default("UTC")
+  meetingType     String          @default("Video")
+  meetingLink     String?
+  location        String?
+  interviewer     String?
+  notes           String?
+  status          InterviewStatus @default(SCHEDULED)
+  createdBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  candidate Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, scheduledAt])
+  @@index([candidateId, scheduledAt])
+  @@index([orgId, status, scheduledAt])
+}
