@@ -22,7 +22,7 @@ const ALLOWED = [
 type UploadResult = {
   fileName: string;
   ok: boolean;
-  status?: "CREATED" | "UPDATED" | "SKIPPED" | "FAILED";
+  status?: "CREATED" | "UPDATED" | "SKIPPED" | "FAILED" | "PROCESSING";
   candidateId?: string;
   resumeId?: string;
   note?: string;
@@ -43,6 +43,8 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
   const [duplicateMode, setDuplicateMode] = React.useState<"update" | "skip">("update");
   const [sourceType, setSourceType] = React.useState<"ZIP" | "PDF_DOCX">("PDF_DOCX");
   const [sourceName, setSourceName] = React.useState<string | null>(null);
+  const [extractedTexts, setExtractedTexts] = React.useState<Record<string, string>>({});
+  const [extractingText, setExtractingText] = React.useState(false);
   const [correlationId, setCorrelationId] = React.useState<string | null>(null);
   const [jobs, setJobs] = React.useState<Array<{ id: string; title: string; status: string }>>([]);
   const [targetJobId, setTargetJobId] = React.useState<string>("none");
@@ -161,6 +163,34 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
     });
   }, [open, loadHistory, loadJobs]);
 
+  const extractPdfTextBrowser = React.useCallback(async (file: File): Promise<string | null> => {
+    try {
+      // Dynamic import keeps pdfjs-dist out of the initial bundle
+      const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs" as any);
+      if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+          import.meta.url,
+        ).toString();
+      }
+      const buffer = await file.arrayBuffer();
+      const doc = await pdfjs.getDocument({ data: buffer }).promise;
+      const pages: string[] = [];
+      for (let p = 1; p <= doc.numPages; p++) {
+        const page = await doc.getPage(p);
+        const content = await page.getTextContent();
+        pages.push(
+          content.items
+            .map((item: any) => ("str" in item ? item.str : ""))
+            .join(" "),
+        );
+      }
+      return pages.join("\n").trim() || null;
+    } catch {
+      return null; // silently fall back to server-side extraction
+    }
+  }, []);
+
   const extractZipFiles = async (zipFile: File): Promise<File[]> => {
     try {
       const zip = new JSZip();
@@ -261,6 +291,25 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
       setResults([]);
       setSourceType(zipSelected ? "ZIP" : "PDF_DOCX");
       setSourceName(zipSelected ? selectedZipName : null);
+
+      // Approach 4: extract PDF text in browser so server skips PDF parsing
+      if (valid.length > 0) {
+        setExtractingText(true);
+        const entries = await Promise.all(
+          valid
+            .filter((f) => f.name.toLowerCase().endsWith(".pdf"))
+            .map(async (f) => {
+              const text = await extractPdfTextBrowser(f);
+              return text ? ([f.name, text] as [string, string]) : null;
+            }),
+        );
+        const textMap: Record<string, string> = {};
+        for (const entry of entries) {
+          if (entry) textMap[entry[0]] = entry[1];
+        }
+        setExtractedTexts(textMap);
+        setExtractingText(false);
+      }
     } finally {
       setExtracting(false);
     }
@@ -277,6 +326,9 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
     try {
       const form = new FormData();
       files.forEach((f) => form.append("files", f));
+      if (Object.keys(extractedTexts).length > 0) {
+        form.append("extractedTexts", JSON.stringify(extractedTexts));
+      }
       form.append("sourceType", sourceType);
       if (sourceName) form.append("sourceName", sourceName);
       form.append("duplicateMode", duplicateMode);
@@ -331,6 +383,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
       }
 
       setFiles([]);
+      setExtractedTexts({});
       router.refresh();
       await loadHistory();
     } catch (err: any) {
@@ -370,6 +423,11 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-blue-500" />
               Extracting ZIP file(s)...
+            </div>
+          ) : extractingText ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-violet-500" />
+              Reading PDF text locally...
             </div>
           ) : null}
           <div className="text-xs text-muted-foreground">
@@ -422,7 +480,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
             <Button
               className="rounded-2xl"
               onClick={uploadAll}
-              disabled={busy || !files.length || extracting}
+              disabled={busy || !files.length || extracting || extractingText}
             >
               {busy ? "Uploading..." : "Upload & Parse"}
             </Button>
@@ -494,7 +552,9 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                               ? "text-blue-600 font-semibold"
                               : r.status === "SKIPPED"
                                 ? "text-amber-600 font-semibold"
-                                : "text-red-600 font-semibold"
+                                : r.status === "PROCESSING"
+                                  ? "text-violet-600 font-semibold"
+                                  : "text-red-600 font-semibold"
                         }
                       >
                         {r.status ?? (r.ok ? "SUCCESS" : "FAILED")}

@@ -401,3 +401,112 @@ export async function extractCandidateProfile(
     throw err;
   }
 }
+
+// ─── Batch extraction ───────────────────────────────────────────────────────
+// Sends up to BATCH_LLM_SIZE resumes in a single OpenAI call.
+// Returns one result per input item. extract=null means that item failed;
+// the caller should fall back to individual extractCandidateProfile() calls.
+
+export const BATCH_LLM_SIZE = 5;
+
+export type BatchLlmItem = { rawText: string; fileName: string };
+export type BatchLlmResult = { extract: CandidateProfileExtract | null; error?: string };
+
+export async function extractCandidateProfilesBatch(
+  items: BatchLlmItem[],
+  orgId: string,
+): Promise<BatchLlmResult[]> {
+  if (!items.length) return [];
+  if (!process.env.OPENAI_API_KEY) {
+    return items.map(() => ({ extract: null, error: "OPENAI_API_KEY not configured" }));
+  }
+
+  const charsPerResume = Math.floor(MAX_TEXT_CHARS / items.length);
+  const startTime = Date.now();
+
+  const resumeBlocks = items
+    .map((item, i) =>
+      `=== RESUME ${i + 1} (${item.fileName}) ===\n${item.rawText.slice(0, charsPerResume)}`,
+    )
+    .join("\n\n");
+
+  const systemPrompt = [
+    "You are an expert resume parser.",
+    `You will receive ${items.length} resume(s). Extract structured candidate data from each.`,
+    `Return a JSON object with a "resumes" array containing EXACTLY ${items.length} object(s), one per resume in the same order.`,
+    "Each object must have: personal, educations, skillsFlat, technologies, experiences, projects.",
+    "Do not guess. If a field is missing, use null or [].",
+    "Deduplicate skills and technologies.",
+    "Technology category names must be short uppercase labels (e.g. LANGUAGES, FRAMEWORKS, AI/ML, CLOUD & DEVOPS, TOOLS).",
+  ].join("\n");
+
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: DEFAULT_MODEL,
+      temperature: 0,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: resumeBlocks },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const outputText = response.choices[0]?.message?.content ?? "";
+    const usage = response.usage;
+
+    if (orgId && usage) {
+      await trackLLMUsage({
+        orgId,
+        model: DEFAULT_MODEL,
+        operation: "resume_parse_batch",
+        inputTokens: usage.prompt_tokens,
+        outputTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        cost: estimateCost(DEFAULT_MODEL, usage.prompt_tokens, usage.completion_tokens),
+        success: true,
+        duration: Date.now() - startTime,
+        metadata: { batchSize: items.length },
+      }).catch(() => {});
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(outputText);
+    } catch {
+      throw new Error("Batch LLM returned invalid JSON");
+    }
+
+    const resumesRaw = (parsed as Record<string, unknown>)?.resumes;
+    if (!Array.isArray(resumesRaw)) {
+      throw new Error("Batch LLM did not return a resumes array");
+    }
+
+    // Validate each item with Zod; return null for any that fail
+    return Array.from({ length: items.length }, (_, i) => {
+      const raw = resumesRaw[i];
+      if (raw == null) return { extract: null, error: `Missing result for resume ${i + 1}` };
+      try {
+        return { extract: candidateProfileExtractSchema.parse(raw) };
+      } catch (err) {
+        return { extract: null, error: err instanceof Error ? err.message : "Schema validation failed" };
+      }
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error("Batch LLM call failed", { batchSize: items.length, error: message });
+    if (orgId) {
+      await trackLLMUsage({
+        orgId,
+        model: DEFAULT_MODEL,
+        operation: "resume_parse_batch",
+        inputTokens: 0, outputTokens: 0, totalTokens: 0, cost: 0,
+        success: false,
+        duration: Date.now() - startTime,
+        metadata: { error: message, batchSize: items.length },
+      }).catch(() => {});
+    }
+    return items.map(() => ({ extract: null, error: message }));
+  }
+}
