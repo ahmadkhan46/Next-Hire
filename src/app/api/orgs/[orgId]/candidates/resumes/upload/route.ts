@@ -16,6 +16,14 @@ const ALLOWED_MIME = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
+
+function isAllowedFile(file: File): boolean {
+  if (ALLOWED_MIME.has(file.type)) return true;
+  // Some environments (e.g. Vercel) may strip or mislabel the MIME type;
+  // fall back to file extension so valid uploads are never incorrectly rejected.
+  const lower = file.name.toLowerCase();
+  return lower.endsWith(".pdf") || lower.endsWith(".docx");
+}
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FILE_ATTEMPTS = 3;
 const BASE_RETRY_DELAY_MS = 500;
@@ -263,7 +271,7 @@ export const POST = createRoute(
               transient: false,
             };
           }
-          if (!ALLOWED_MIME.has(file.type)) {
+          if (!isAllowedFile(file)) {
             if (itemId) {
               await prisma.resumeUploadItem.update({
                 where: { id: itemId },

@@ -2,6 +2,11 @@ import { prisma } from './prisma';
 import { MatchStatus } from '@prisma/client';
 import { logger } from './logger';
 
+const MATCH_CANDIDATES_LIMIT = Math.max(
+  1,
+  Number(process.env.MATCH_CANDIDATES_LIMIT ?? 500) || 500
+);
+
 type MatchComputation = {
   candidateId: string;
   fullName: string;
@@ -89,7 +94,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
         email: true,
         skills: { include: { skill: true } },
       },
-      take: 500,
+      take: MATCH_CANDIDATES_LIMIT,
     }),
     prisma.matchResult.findMany({
       where: { jobId },

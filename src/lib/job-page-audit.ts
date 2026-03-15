@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { JobPageAuditAction, Prisma } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 export async function logJobPageAudit(input: {
   orgId: string;
@@ -21,6 +22,6 @@ export async function logJobPageAudit(input: {
       },
     });
   } catch (error) {
-    console.error("Failed to write job page audit event:", error);
+    logger.error("Failed to write job page audit event", { error });
   }
 }

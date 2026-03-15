@@ -4,7 +4,7 @@ import { generateEmbedding, cosineSimilarity } from './embeddings';
 export interface SemanticSearchResult {
   id: string;
   similarity: number;
-  data: any;
+  data: Record<string, string | null>;
 }
 
 // Search candidates by semantic similarity
@@ -72,7 +72,7 @@ export async function findSimilarCandidates(
     return [];
   }
 
-  const targetEmbedding = resume.embedding as any as number[];
+  const targetEmbedding = resume.embedding as unknown as number[];
 
   // Get all other candidates with embeddings
   const candidates = await prisma.$queryRaw<Array<{
@@ -168,7 +168,7 @@ export async function semanticJobMatch(
     return [];
   }
 
-  const jobEmbedding = job.embedding as any as number[];
+  const jobEmbedding = job.embedding as unknown as number[];
 
   const candidates = await prisma.$queryRaw<Array<{
     id: string;

@@ -1,5 +1,6 @@
 import { CandidateActivityType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 interface LogCandidateActivityInput {
   orgId: string;
@@ -25,6 +26,6 @@ export async function logCandidateActivity(input: LogCandidateActivityInput) {
       },
     });
   } catch (error) {
-    console.error("Failed to log candidate activity", error);
+    logger.error("Failed to log candidate activity", { error });
   }
 }

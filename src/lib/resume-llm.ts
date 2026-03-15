@@ -7,20 +7,27 @@ import {
 import { estimateCost } from "@/lib/llm-cost";
 import { LLMError } from "@/lib/errors";
 import { trackLLMUsage } from "@/lib/llm-tracking";
+import { logger } from "@/lib/logger";
 
 const PROMPT_VERSION = "candidate-profile-v1";
 const DEFAULT_MODEL = process.env.OPENAI_RESUME_MODEL ?? "gpt-4o-mini";
 const MAX_TEXT_CHARS = 50000;
 
+// On Vercel serverless the function hard-limit is 60 s.
+// PDF extraction can take ~10 s, each LLM attempt ~20 s, and the DB write ~5 s,
+// so we cap each LLM call at 20 s when running on Vercel.
+const IS_VERCEL = process.env.VERCEL === "1" || process.env.VERCEL === "true";
+const DEFAULT_TIMEOUT_MS = IS_VERCEL ? 20000 : 30000;
+
 // Models that support structured outputs (json_schema)
 const STRUCTURED_OUTPUT_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4o-2024-08-06'];
 
 if (!process.env.OPENAI_API_KEY) {
-  console.warn("OPENAI_API_KEY not set - LLM resume parsing will fail");
+  logger.warn("OPENAI_API_KEY not set - LLM resume parsing will fail");
 }
 
 if (!STRUCTURED_OUTPUT_MODELS.includes(DEFAULT_MODEL)) {
-  console.warn(
+  logger.warn(
     `Model ${DEFAULT_MODEL} may not support structured outputs. Use gpt-4o or gpt-4o-mini.`
   );
 }
@@ -276,7 +283,7 @@ export async function extractCandidateProfile(
     const timeoutMs =
       typeof options?.timeoutMs === "number"
         ? options.timeoutMs
-        : Number(process.env.OPENAI_RESUME_TIMEOUT_MS ?? 30000);
+        : Number(process.env.OPENAI_RESUME_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS);
     const { outputText, warnings, usage } = await callOpenAIWithTimeout(
       resumeText,
       undefined,
@@ -324,7 +331,7 @@ export async function extractCandidateProfile(
     if (err instanceof ResumeParseError || err instanceof ZodError) {
       const errorType =
         err instanceof ResumeParseError ? "JSON parse error" : "Zod validation error";
-      console.warn(`${errorType}, retrying with error context...`);
+      logger.warn(`${errorType}, retrying with error context...`);
 
       const timeoutMs =
         typeof options?.timeoutMs === "number"

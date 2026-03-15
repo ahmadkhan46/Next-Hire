@@ -36,7 +36,7 @@ export async function trackLLMUsage(record: LLMUsageRecord) {
     `;
   } catch (error) {
     // Don't fail the request if logging fails
-    console.error('Failed to track LLM usage:', sanitizeForLog(String(error)));
+    logger.error("Failed to track LLM usage", { error: sanitizeForLog(String(error)) });
   }
 }
 
@@ -72,7 +72,7 @@ export async function getOrgLLMStats(orgId: string, days: number = 30) {
       avg_duration: 0,
     };
   } catch (error) {
-    console.error('Failed to get LLM stats:', sanitizeForLog(String(error)));
+    logger.error("Failed to get LLM stats", { error: sanitizeForLog(String(error)) });
     return {
       total_cost: 0,
       total_tokens: 0,
@@ -107,7 +107,7 @@ export async function getOrgLLMStatsByModel(orgId: string, days: number = 30) {
 
     return stats;
   } catch (error) {
-    console.error('Failed to get LLM stats by model:', sanitizeForLog(String(error)));
+    logger.error("Failed to get LLM stats by model", { error: sanitizeForLog(String(error)) });
     return [];
   }
 }

@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { logger } from './logger';
 
 type NotificationType = 'UPLOAD_COMPLETE' | 'UPLOAD_FAILED' | 'MATCH_FOUND' | 'RESUME_PARSED' | 'JOB_CREATED' | 'SYSTEM';
 
@@ -32,6 +33,6 @@ export async function createNotification({
       },
     });
   } catch (error) {
-    console.error('Failed to create notification:', error);
+    logger.error("Failed to create notification", { error });
   }
 }

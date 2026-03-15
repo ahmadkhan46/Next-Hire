@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { clerkClient } from '@clerk/nextjs/server';
+import { logger } from './logger';
 
 // Ensure user exists in database and has org membership
 export async function ensureUserAndMembership(
@@ -15,7 +16,7 @@ export async function ensureUserAndMembership(
         (e) => e.id === clerkUser.primaryEmailAddressId
       )?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress;
     } catch (error) {
-      console.error('Failed to get Clerk user:', error);
+      logger.error("Failed to get Clerk user", { error });
     }
   }
 

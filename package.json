@@ -12,6 +12,7 @@
     "locations:build": "tsx scripts/build-locations-data.ts",
     "seed:enterprise": "tsx scripts/seed-enterprise-sample-data.ts",
     "db:health": "node scripts/migration-health.mjs",
+    "uploads:clear-history": "tsx scripts/clear-upload-history.ts",
     "skills:sync": "tsx scripts/sync-org-skills.ts",
     "audit:backfill:job-actors": "tsx scripts/backfill-job-audit-actors.ts",
     "smoke:test": "node scripts/smoke-test.mjs",
