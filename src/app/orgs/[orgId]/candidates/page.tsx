@@ -1,12 +1,12 @@
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowUpRight, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CandidatesActions } from "./candidates-actions";
 import { CandidateSearch } from "./candidate-search";
+import { CandidatesList } from "./candidates-list";
 import type { Prisma } from "@prisma/client";
 
 export default async function CandidatesPage({
@@ -87,38 +87,15 @@ export default async function CandidatesPage({
           ) : null}
         </div>
 
-        {candidates.length === 0 ? (
-          <div className="premium-subblock rounded-2xl border border-dashed bg-background/40 p-6 text-sm text-muted-foreground">
-            {q
+        <CandidatesList
+          orgId={orgId}
+          candidates={candidates}
+          emptyMessage={
+            q
               ? "No candidates found for this search."
-              : "No candidates yet. Use import to add multiple candidates with resumes."}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {candidates.map((c) => (
-              <div
-                key={c.id}
-                className="premium-subblock group rounded-2xl border bg-background/40 p-4 transition hover:bg-accent/40"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-base font-semibold">{c.fullName}</div>
-                    <div className="mt-1 text-sm text-muted-foreground">
-                      {c.email ?? "--"} {c.phone ? `- ${c.phone}` : ""}
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/orgs/${orgId}/candidates/${c.id}`}
-                    className="inline-flex w-full items-center justify-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-sm transition hover:bg-accent/60 sm:w-auto"
-                  >
-                    View <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              : "No candidates yet. Use import to add multiple candidates with resumes."
+          }
+        />
       </Card>
     </div>
   );

@@ -204,3 +204,30 @@ export const POST = createRoute(
     return NextResponse.json({ ok: true, id: candidate.id, candidate }, { status: 201 });
   }
 );
+
+export const DELETE = createRoute(
+  {
+    requireAuth: true,
+    requireOrg: true,
+    permission: "candidates:write",
+  },
+  async (req: NextRequest, { orgId }) => {
+    const body = await req.json().catch(() => ({}));
+    const ids: unknown = body.ids;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: "ids must be a non-empty array" }, { status: 400 });
+    }
+
+    const safeIds = ids.filter((id): id is string => typeof id === "string" && id.length > 0);
+    if (safeIds.length === 0) {
+      return NextResponse.json({ error: "No valid ids provided" }, { status: 400 });
+    }
+
+    const { count } = await prisma.candidate.deleteMany({
+      where: { id: { in: safeIds }, orgId: orgId! },
+    });
+
+    return NextResponse.json({ ok: true, deleted: count });
+  }
+);

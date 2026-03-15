@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Settings } from "lucide-react";
+import { OrgSettingsClient } from "./settings-client";
 
 export default async function SettingsPage({
   params,
@@ -17,6 +18,7 @@ export default async function SettingsPage({
       id: true,
       name: true,
       createdAt: true,
+      resumeParseTimeoutSeconds: true,
       _count: {
         select: {
           jobs: true,
@@ -82,6 +84,11 @@ export default async function SettingsPage({
           </div>
         </div>
       </div>
+
+      <OrgSettingsClient
+        orgId={orgId}
+        resumeParseTimeoutSeconds={org.resumeParseTimeoutSeconds}
+      />
     </div>
   );
 }

@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import { EditCandidateEnhanced } from "@/components/edit-candidate-enhanced";
 import { RefreshMatches } from "./refresh-matches";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,27 +67,21 @@ export default function CandidateActions({
   candidate: CandidateShape;
 }) {
   const router = useRouter();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
-    if (!confirm('Are you sure you want to delete this candidate? This action cannot be undone.')) {
-      return;
-    }
-
     setDeleting(true);
     try {
       const res = await fetch(`/api/orgs/${orgId}/candidates/${candidateId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-
-      if (!res.ok) throw new Error('Failed to delete');
-
-      toast.success('Candidate deleted');
+      if (!res.ok) throw new Error("Failed to delete");
+      toast.success("Candidate deleted");
       router.push(`/orgs/${orgId}/candidates`);
       router.refresh();
     } catch {
-      toast.error('Failed to delete candidate');
-    } finally {
+      toast.error("Failed to delete candidate");
       setDeleting(false);
     }
   }
@@ -91,12 +93,43 @@ export default function CandidateActions({
       <Button
         variant="outline"
         className="rounded-2xl text-destructive hover:bg-destructive/10"
-        onClick={handleDelete}
-        disabled={deleting}
+        onClick={() => setConfirmOpen(true)}
       >
         <Trash2 className="mr-2 h-4 w-4" />
-        {deleting ? 'Deleting...' : 'Delete'}
+        Delete
       </Button>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="rounded-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete candidate?</DialogTitle>
+            <DialogDescription>
+              <span className="font-medium text-foreground">{candidate.fullName}</span> and all
+              their data (resumes, matches, notes) will be permanently deleted. This cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              className="rounded-2xl"
+              onClick={() => setConfirmOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-2xl"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {deleting ? "Deleting…" : "Yes, delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

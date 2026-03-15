@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+export const maxDuration = 120;
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -7,23 +8,6 @@ import { buildCandidateUpdate } from "@/lib/resume-apply";
 import { createRoute } from "@/lib/api-middleware";
 import { autoMatchCandidateToJobs } from "@/lib/auto-matching";
 import { logCandidateActivity } from "@/lib/candidate-activity";
-
-function calculateNameSimilarity(name1: string, name2: string): number {
-  const words1 = name1.split(/\s+/).filter(Boolean);
-  const words2 = name2.split(/\s+/).filter(Boolean);
-  
-  let matches = 0;
-  for (const word1 of words1) {
-    for (const word2 of words2) {
-      if (word1 === word2 || word1.includes(word2) || word2.includes(word1)) {
-        matches++;
-        break;
-      }
-    }
-  }
-  
-  return matches / Math.max(words1.length, words2.length);
-}
 
 export const POST = createRoute(
   {
@@ -40,15 +24,23 @@ export const POST = createRoute(
     };
     const force = req.nextUrl.searchParams.get("force") === "true";
 
-  const resume = await prisma.resume.findFirst({
-    where: { id: resumeId, candidateId },
-    select: {
-      id: true,
-      rawText: true,
-      parseStatus: true,
-      candidate: { select: { id: true, orgId: true, fullName: true } },
-    },
-  });
+  const [resume, orgSettings] = await Promise.all([
+    prisma.resume.findFirst({
+      where: { id: resumeId, candidateId },
+      select: {
+        id: true,
+        rawText: true,
+        parseStatus: true,
+        candidate: { select: { id: true, orgId: true, fullName: true } },
+      },
+    }),
+    prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { resumeParseTimeoutSeconds: true },
+    }),
+  ]);
+
+  const timeoutMs = (orgSettings?.resumeParseTimeoutSeconds ?? 30) * 1000;
 
     if (!resume || resume.candidate.orgId !== orgId) {
       return NextResponse.json({ error: "Resume not found" }, { status: 404 });
@@ -71,48 +63,8 @@ export const POST = createRoute(
     });
 
     try {
-      const llm = await extractCandidateProfile(resume.rawText, orgId);
+      const llm = await extractCandidateProfile(resume.rawText, orgId, { timeoutMs });
       const extract = llm.extract;
-
-      // Check for name mismatch
-      const parsedName = extract.personal?.fullName?.toLowerCase().trim();
-      const candidateName = resume.candidate.fullName.toLowerCase().trim();
-      
-      if (parsedName && candidateName) {
-        const similarity = calculateNameSimilarity(parsedName, candidateName);
-        if (similarity < 0.5) {
-          // Names don't match - add warning
-          await prisma.resume.update({
-            where: { id: resume.id },
-            data: {
-              parseStatus: "NEEDS_REVIEW",
-              parseError: `Name mismatch: Resume shows "${extract.personal.fullName}" but candidate is "${resume.candidate.fullName}". This may be the wrong resume.`,
-              parsedAt: new Date(),
-              parsedJson: {
-                ...extract,
-                warning: 'NAME_MISMATCH',
-                extractedName: extract.personal.fullName,
-                candidateName: resume.candidate.fullName,
-              },
-            },
-          });
-
-          await logCandidateActivity({
-            orgId,
-            candidateId,
-            type: "RESUME_PARSE_FAILED",
-            title: "Resume needs review",
-            description: `Name mismatch: parsed \"${extract.personal.fullName}\" vs candidate \"${resume.candidate.fullName}\".`,
-            actorId: userId,
-            metadata: { resumeId, code: "NAME_MISMATCH" },
-          });
-
-          return NextResponse.json({
-            error: `Name mismatch detected. Resume shows "${extract.personal.fullName}" but candidate is "${resume.candidate.fullName}".`,
-            code: 'NAME_MISMATCH',
-          }, { status: 400 });
-        }
-      }
 
       const { updateCandidate, experiences, projects, technologies, skills, educations } =
         buildCandidateUpdate(extract);
@@ -199,7 +151,11 @@ export const POST = createRoute(
 
       return NextResponse.json({ ok: true, status: "SAVED" });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Parse failed";
+      const rawMessage = err instanceof Error ? err.message : "Parse failed";
+      const isTimeout = rawMessage.toLowerCase().includes("timeout");
+      const message = isTimeout
+        ? `LLM timeout after ${orgSettings?.resumeParseTimeoutSeconds ?? 30} s. You can increase the limit in Organisation Settings → AI Settings.`
+        : rawMessage;
       const status =
         err instanceof ResumeParseError ||
         (err instanceof Error && err.name === "ZodError")
@@ -235,7 +191,10 @@ export const POST = createRoute(
         metadata: { resumeId, status },
       });
 
-      return NextResponse.json({ error: message }, { status: 500 });
+      return NextResponse.json(
+        { error: message, ...(isTimeout ? { code: "TIMEOUT", settingsPath: `/orgs/${orgId}/settings` } : {}) },
+        { status: 500 }
+      );
     }
   }
 );

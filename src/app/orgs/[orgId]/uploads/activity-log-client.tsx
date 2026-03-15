@@ -16,6 +16,7 @@ type BatchItem = {
   id: string;
   fileName: string;
   candidateId: string | null;
+  resumeId: string | null;
   status: string;
   note: string | null;
   error: string | null;
@@ -115,6 +116,8 @@ export function ActivityLogClient({
   const [pageSize, setPageSize] = useState(String(pagination.pageSize));
   const [retrying, setRetrying] = useState<string | null>(null);
   const [exporting, setExporting] = useState<string | null>(null);
+  const [reparsingItems, setReparsingItems] = useState<Set<string>>(new Set());
+  const [reparsingBatch, setReparsingBatch] = useState<string | null>(null);
   const visiblePages = getVisiblePages(pagination.page, pagination.totalPages);
 
   const filteredBatches = batches;
@@ -218,6 +221,68 @@ export function ActivityLogClient({
       toast.error(error.message || "Export failed");
     } finally {
       setExporting(null);
+    }
+  };
+
+  const reparseItem = async (candidateId: string, resumeId: string, itemId: string) => {
+    setReparsingItems((prev) => new Set(prev).add(itemId));
+    try {
+      const res = await fetch(
+        `/api/orgs/${orgId}/candidates/${candidateId}/resumes/${resumeId}/parse?force=true`,
+        { method: "POST" }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.code === "TIMEOUT") {
+          toast.error(data.error, {
+            description: "Go to Settings → AI Settings to increase the timeout.",
+            action: { label: "Open Settings", onClick: () => window.open(`/orgs/${orgId}/settings`, "_blank") },
+            duration: 8000,
+          });
+        } else {
+          throw new Error(data.error || "Re-parse failed");
+        }
+        return;
+      }
+      toast.success("Re-parse complete — refreshing…");
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to re-parse");
+    } finally {
+      setReparsingItems((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
+    }
+  };
+
+  const reparseAll = async (batch: Batch) => {
+    const reparsable = batch.items.filter(
+      (item) =>
+        item.status !== "CREATED" &&
+        item.status !== "UPDATED" &&
+        item.candidateId &&
+        item.resumeId
+    );
+    if (reparsable.length === 0) return;
+    setReparsingBatch(batch.id);
+    try {
+      const results = await Promise.allSettled(
+        reparsable.map((item) =>
+          fetch(
+            `/api/orgs/${orgId}/candidates/${item.candidateId}/resumes/${item.resumeId}/parse?force=true`,
+            { method: "POST" }
+          )
+        )
+      );
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      toast.success(`Re-parse queued for ${succeeded} of ${reparsable.length} file(s)`);
+      setTimeout(() => window.location.reload(), 2000);
+    } catch {
+      toast.error("Failed to re-parse all");
+    } finally {
+      setReparsingBatch(null);
     }
   };
 
@@ -410,6 +475,24 @@ export function ActivityLogClient({
                     Retry {batch.failedCount} Failed
                   </Button>
                 )}
+                {batch.items.some(
+                  (item) =>
+                    item.status !== "CREATED" &&
+                    item.status !== "UPDATED" &&
+                    item.candidateId &&
+                    item.resumeId
+                ) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-2xl"
+                    onClick={() => reparseAll(batch)}
+                    disabled={reparsingBatch === batch.id}
+                  >
+                    <RefreshCw className={`h-3 w-3 mr-1 ${reparsingBatch === batch.id ? "animate-spin" : ""}`} />
+                    Re-parse All
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -441,7 +524,7 @@ export function ActivityLogClient({
                   {batch.items.map((item) => (
                     <div
                       key={item.id}
-                      className="grid grid-cols-[1.6fr_0.8fr_2fr_auto] items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-xs"
+                      className="grid grid-cols-[1.6fr_0.8fr_2fr_auto_auto] items-center gap-2 rounded-xl border bg-background/60 px-3 py-2 text-xs"
                     >
                       <div className="truncate" title={item.fileName}>
                         {item.fileName}
@@ -473,6 +556,21 @@ export function ActivityLogClient({
                         </Link>
                       ) : (
                         <span className="text-muted-foreground">-</span>
+                      )}
+                      {item.status !== "CREATED" &&
+                      item.status !== "UPDATED" &&
+                      item.candidateId &&
+                      item.resumeId ? (
+                        <button
+                          onClick={() => reparseItem(item.candidateId!, item.resumeId!, item.id)}
+                          disabled={reparsingItems.has(item.id)}
+                          className="inline-flex items-center gap-1 rounded-full border bg-background px-2 py-1 text-xs hover:bg-accent/60 disabled:opacity-50"
+                        >
+                          <RefreshCw className={`h-3 w-3 ${reparsingItems.has(item.id) ? "animate-spin" : ""}`} />
+                          Re-parse
+                        </button>
+                      ) : (
+                        <span />
                       )}
                     </div>
                   ))}

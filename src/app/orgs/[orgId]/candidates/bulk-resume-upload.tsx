@@ -22,15 +22,12 @@ const ALLOWED = [
 type UploadResult = {
   fileName: string;
   ok: boolean;
-  status?: "CREATED" | "UPDATED" | "SKIPPED" | "FAILED" | "PROCESSING";
+  status?: "CREATED" | "UPDATED" | "SKIPPED" | "FAILED";
   candidateId?: string;
   resumeId?: string;
   note?: string;
   error?: string;
   errorCode?: string;
-  attempts?: number;
-  retryCount?: number;
-  transient?: boolean;
 };
 
 export function BulkResumeUpload({ orgId }: { orgId: string }) {
@@ -488,8 +485,8 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
           {busy ? (
             <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-slate-500" />
-              Processing {totalFiles} file(s). This may take a few minutes.
-              {correlationId ? <span>Correlation ID: {correlationId}</span> : null}
+              AI is parsing {totalFiles} resume(s). Please wait — this takes 20–60 seconds.
+              {correlationId ? <span className="opacity-60">ID: {correlationId}</span> : null}
             </div>
           ) : null}
           {results.length ? (
@@ -552,9 +549,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                               ? "text-blue-600 font-semibold"
                               : r.status === "SKIPPED"
                                 ? "text-amber-600 font-semibold"
-                                : r.status === "PROCESSING"
-                                  ? "text-violet-600 font-semibold"
-                                  : "text-red-600 font-semibold"
+                                : "text-red-600 font-semibold"
                         }
                       >
                         {r.status ?? (r.ok ? "SUCCESS" : "FAILED")}
@@ -564,16 +559,12 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
                         title={
                           r.ok
                             ? r.note ?? r.candidateId
-                            : `${r.errorCode ? `[${r.errorCode}] ` : ""}${r.error ?? "Processing issue"}${
-                                r.retryCount && r.retryCount > 0 ? ` (retries: ${r.retryCount})` : ""
-                              }`
+                            : `${r.errorCode ? `[${r.errorCode}] ` : ""}${r.error ?? "Processing issue"}`
                         }
                       >
                         {r.ok
                           ? r.note ?? "Processed"
-                          : `${r.errorCode ? `[${r.errorCode}] ` : ""}${r.error ?? "Processing issue"}${
-                              r.retryCount && r.retryCount > 0 ? ` (retries: ${r.retryCount})` : ""
-                            }`}
+                          : `${r.errorCode ? `[${r.errorCode}] ` : ""}${r.error ?? "Processing issue"}`}
                       </span>
                     </div>
                   ))}

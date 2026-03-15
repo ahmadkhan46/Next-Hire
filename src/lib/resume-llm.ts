@@ -13,11 +13,10 @@ const PROMPT_VERSION = "candidate-profile-v1";
 const DEFAULT_MODEL = process.env.OPENAI_RESUME_MODEL ?? "gpt-4o-mini";
 const MAX_TEXT_CHARS = 50000;
 
-// On Vercel serverless the function hard-limit is 60 s.
-// PDF extraction can take ~10 s, each LLM attempt ~20 s, and the DB write ~5 s,
-// so we cap each LLM call at 20 s when running on Vercel.
+// Upload route now runs with maxDuration = 120 s, so LLM calls can take longer.
+// Individual parse calls default to 45 s on Vercel, 60 s locally.
 const IS_VERCEL = process.env.VERCEL === "1" || process.env.VERCEL === "true";
-const DEFAULT_TIMEOUT_MS = IS_VERCEL ? 20000 : 30000;
+const DEFAULT_TIMEOUT_MS = IS_VERCEL ? 45000 : 60000;
 
 // Models that support structured outputs (json_schema)
 const STRUCTURED_OUTPUT_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4o-2024-08-06'];
@@ -336,7 +335,7 @@ export async function extractCandidateProfile(
       const timeoutMs =
         typeof options?.timeoutMs === "number"
           ? options.timeoutMs
-          : Number(process.env.OPENAI_RESUME_TIMEOUT_MS ?? 30000);
+          : Number(process.env.OPENAI_RESUME_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS);
       const { outputText, warnings, usage } = await callOpenAIWithTimeout(
         resumeText,
         err.message,
@@ -518,9 +517,11 @@ export async function extractCandidateProfilesBatch(
   ].join("\n");
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  // Allow 15 s per resume in the batch, capped at 90 s total
+  const batchTimeoutMs = Math.min(90000, items.length * 15000);
 
   try {
-    const response = await openai.chat.completions.create({
+    const responsePromise = openai.chat.completions.create({
       model: DEFAULT_MODEL,
       temperature: 0,
       messages: [
@@ -529,6 +530,17 @@ export async function extractCandidateProfilesBatch(
       ],
       response_format: { type: "json_object" },
     });
+
+    let batchTimeoutId: NodeJS.Timeout | null = null;
+    const batchTimeoutPromise = new Promise<never>((_, reject) => {
+      batchTimeoutId = setTimeout(
+        () => reject(new Error(`Batch LLM timeout after ${batchTimeoutMs / 1000}s`)),
+        batchTimeoutMs,
+      );
+    });
+
+    const response = await Promise.race([responsePromise, batchTimeoutPromise]);
+    if (batchTimeoutId) clearTimeout(batchTimeoutId);
 
     const outputText = response.choices[0]?.message?.content ?? "";
     const usage = response.usage;
