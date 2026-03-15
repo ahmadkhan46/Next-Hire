@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -26,12 +26,11 @@ function isAllowedFile(file: File): boolean {
 }
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FILE_ATTEMPTS = 3;
-const BASE_RETRY_DELAY_MS = 500;
+const BASE_RETRY_DELAY_MS = 100;
 const RETRYABLE_PRISMA_CODES = new Set(["P1001", "P1002", "P1008", "P1017", "P2024", "P2034"]);
-const DEFAULT_UPLOAD_BATCH_SIZE = process.env.NODE_ENV === "production" ? 1 : 5;
 const UPLOAD_BATCH_SIZE = Math.max(
   1,
-  Math.min(5, Number(process.env.RESUME_UPLOAD_BATCH_SIZE ?? DEFAULT_UPLOAD_BATCH_SIZE) || DEFAULT_UPLOAD_BATCH_SIZE)
+  Math.min(10, Number(process.env.RESUME_UPLOAD_BATCH_SIZE ?? 5) || 5)
 );
 
 function candidateNameFromFile(fileName: string) {
@@ -471,11 +470,18 @@ export const POST = createRoute(
                 },
               });
 
-              if (targetJobId) {
-                await autoMatchCandidateToJob(candidate.id, targetJobId, orgId);
-              } else {
-                await autoMatchCandidateToJobs(candidate.id, orgId);
-              }
+              // Fire-and-forget: auto-matching is non-critical and can take 10-15s.
+              // Awaiting it inside the upload route burns the Vercel function timeout.
+              const matchPromise = targetJobId
+                ? autoMatchCandidateToJob(candidate.id, targetJobId, orgId)
+                : autoMatchCandidateToJobs(candidate.id, orgId);
+              matchPromise.catch((err) =>
+                logger.error("Auto-match failed after upload", {
+                  candidateId: candidate.id,
+                  batchId: batch.id,
+                  error: err instanceof Error ? err.message : String(err),
+                })
+              );
 
               if (itemId) {
                 const retrySuffix = attempt > 1 ? ` after ${attempt - 1} retr${attempt - 1 === 1 ? "y" : "ies"}` : "";
