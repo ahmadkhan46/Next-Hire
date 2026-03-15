@@ -402,6 +402,83 @@ export async function extractCandidateProfile(
   }
 }
 
+// ─── Batch normalizer ────────────────────────────────────────────────────────
+// json_object mode lets the model omit nullable fields entirely (undefined)
+// instead of setting them to null.  This normalizer fills gaps before Zod.
+function normalizeBatchItem(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const obj = { ...(raw as Record<string, unknown>) };
+
+  // ── personal ──
+  const p = obj.personal && typeof obj.personal === "object"
+    ? { ...(obj.personal as Record<string, unknown>) }
+    : {};
+  p.fullName        = p.fullName        ?? null;
+  p.email           = p.email           ?? null;
+  p.phone           = p.phone           ?? null;
+  p.location        = p.location        ?? null;
+  p.currentTitle    = p.currentTitle    ?? null;
+  p.yearsOfExperience = p.yearsOfExperience ?? null;
+  p.notes           = p.notes           ?? null;
+  p.education       = p.education       ?? null;
+  obj.personal = p;
+
+  // ── top-level arrays ──
+  obj.skillsFlat  = Array.isArray(obj.skillsFlat)  ? obj.skillsFlat  : [];
+  obj.educations  = Array.isArray(obj.educations)  ? obj.educations  : [];
+  obj.experiences = Array.isArray(obj.experiences) ? obj.experiences : [];
+  obj.projects    = Array.isArray(obj.projects)    ? obj.projects    : [];
+
+  // technologies: model sometimes returns {LANGUAGES:[...]} instead of [{category,items}]
+  if (!Array.isArray(obj.technologies)) {
+    if (obj.technologies && typeof obj.technologies === "object") {
+      obj.technologies = Object.entries(obj.technologies as Record<string, unknown>).map(
+        ([category, items]) => ({ category, items: Array.isArray(items) ? items : [] }),
+      );
+    } else {
+      obj.technologies = [];
+    }
+  }
+
+  // ── fill nullable sub-fields in arrays ──
+  obj.educations = (obj.educations as unknown[]).map((e) => {
+    if (!e || typeof e !== "object") return e;
+    const ed = { ...(e as Record<string, unknown>) };
+    ed.school    = ed.school    ?? null;
+    ed.degree    = ed.degree    ?? null;
+    ed.location  = ed.location  ?? null;
+    ed.startYear = ed.startYear ?? null;
+    ed.endYear   = ed.endYear   ?? null;
+    return ed;
+  });
+
+  obj.experiences = (obj.experiences as unknown[]).map((e) => {
+    if (!e || typeof e !== "object") return e;
+    const ex = { ...(e as Record<string, unknown>) };
+    ex.company   = ex.company   ?? "";
+    ex.role      = ex.role      ?? "";
+    ex.location  = ex.location  ?? null;
+    ex.start     = ex.start     ?? null;
+    ex.end       = ex.end       ?? null;
+    ex.isCurrent = ex.isCurrent ?? false;
+    ex.bullets   = Array.isArray(ex.bullets) ? ex.bullets : [];
+    return ex;
+  });
+
+  obj.projects = (obj.projects as unknown[]).map((pr) => {
+    if (!pr || typeof pr !== "object") return pr;
+    const proj = { ...(pr as Record<string, unknown>) };
+    proj.title     = proj.title     ?? "";
+    proj.dates     = proj.dates     ?? null;
+    proj.techStack = proj.techStack ?? null;
+    proj.link      = proj.link      ?? null;
+    proj.bullets   = Array.isArray(proj.bullets) ? proj.bullets : [];
+    return proj;
+  });
+
+  return obj;
+}
+
 // ─── Batch extraction ───────────────────────────────────────────────────────
 // Sends up to BATCH_LLM_SIZE resumes in a single OpenAI call.
 // Returns one result per input item. extract=null means that item failed;
@@ -488,7 +565,7 @@ export async function extractCandidateProfilesBatch(
       const raw = resumesRaw[i];
       if (raw == null) return { extract: null, error: `Missing result for resume ${i + 1}` };
       try {
-        return { extract: candidateProfileExtractSchema.parse(raw) };
+        return { extract: candidateProfileExtractSchema.parse(normalizeBatchItem(raw)) };
       } catch (err) {
         return { extract: null, error: err instanceof Error ? err.message : "Schema validation failed" };
       }
