@@ -40,7 +40,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
   const [busy, setBusy] = React.useState(false);
   const [extracting, setExtracting] = React.useState(false);
   const [results, setResults] = React.useState<UploadResult[]>([]);
-  const [duplicateMode, setDuplicateMode] = React.useState<"update" | "skip">("update");
+  const [duplicateMode, setDuplicateMode] = React.useState<"update" | "skip">("skip");
   const [sourceType, setSourceType] = React.useState<"ZIP" | "PDF_DOCX">("PDF_DOCX");
   const [sourceName, setSourceName] = React.useState<string | null>(null);
   const [extractedTexts, setExtractedTexts] = React.useState<Record<string, string>>({});
