@@ -46,6 +46,8 @@ next-env.d.ts
 # clerk configuration (can include secrets)
 /.clerk/
 
-# local project export / archive folders — never commit these
-/ai-project-code-only-*/
-/ai-project-upload-bundle
+
+
+# local project export / archive files/folders
+/ai-project-*
+/documents/
