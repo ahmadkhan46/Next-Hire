@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Pencil, X, Check } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -155,40 +155,47 @@ export function JobDetailsForm({
           />
         </div>
 
-        {/* Description — read-only by default, edit button to open inline editor */}
+        {/* Description — read-only by default, pencil icon to open inline editor */}
         <div className="md:col-span-2">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">Description</div>
             {!editingDescription ? (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
+                className="rounded-2xl text-muted-foreground"
                 onClick={() => {
                   setDescriptionDraft(description);
                   setEditingDescription(true);
                 }}
-                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent/60 transition"
               >
-                <Pencil className="h-3 w-3" /> Edit
-              </button>
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
             ) : (
-              <div className="flex gap-1">
-                <button
+              <div className="flex items-center gap-2">
+                <Button
                   type="button"
+                  size="sm"
+                  className="rounded-2xl"
                   onClick={() => {
                     setDescription(descriptionDraft);
                     setEditingDescription(false);
                   }}
-                  className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 hover:bg-emerald-100 transition"
                 >
-                  <Check className="h-3 w-3" /> Apply
-                </button>
-                <button
+                  Apply
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-2xl"
                   onClick={() => setEditingDescription(false)}
-                  className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent/60 transition"
                 >
-                  <X className="h-3 w-3" /> Cancel
-                </button>
+                  <X className="h-3.5 w-3.5" />
+                  Cancel
+                </Button>
               </div>
             )}
           </div>
@@ -201,8 +208,8 @@ export function JobDetailsForm({
               autoFocus
             />
           ) : (
-            <div className="mt-2 min-h-[60px] rounded-2xl border bg-background/40 px-3 py-2 text-sm text-muted-foreground whitespace-pre-wrap">
-              {description.trim() || <span className="italic opacity-60">No description yet. Click Edit to add one.</span>}
+            <div className="mt-2 min-h-[64px] rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+              {description.trim() || <span className="italic opacity-50">No description yet. Click Edit to add one.</span>}
             </div>
           )}
         </div>
