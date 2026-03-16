@@ -11,6 +11,7 @@ import { toast } from "sonner";
 type MatchItem = {
   id: string;
   score: number;
+  experienceScore: number | null;
   status: string;
   statusUpdatedAt: string | null;
   job: {
@@ -18,6 +19,7 @@ type MatchItem = {
     title: string;
     location: string | null;
     status: "OPEN" | "CLOSED";
+    requiredYearsOfExperience: number | null;
   } | null;
 };
 
@@ -228,8 +230,13 @@ export function CandidateMatchesPanel({
                 <div className="flex flex-col gap-3 xl:items-end">
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="outline" className="rounded-full">
-                      {Math.round((m.score ?? 0) * 100)}%
+                      {Math.round((m.score ?? 0) * 100)}% match
                     </Badge>
+                    {m.experienceScore !== null && m.job?.requiredYearsOfExperience != null ? (
+                      <Badge variant="outline" className="rounded-full text-xs">
+                        Exp: {Math.round(m.experienceScore * 100)}% of {m.job.requiredYearsOfExperience}yr req.
+                      </Badge>
+                    ) : null}
                     <Badge
                       variant={
                         m.status === "SHORTLISTED"

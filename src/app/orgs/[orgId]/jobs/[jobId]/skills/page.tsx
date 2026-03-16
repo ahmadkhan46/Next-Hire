@@ -28,6 +28,7 @@ export default async function JobSkillsPage({
       status: true,
       workMode: true,
       workModeOther: true,
+      requiredYearsOfExperience: true,
     },
   });
 

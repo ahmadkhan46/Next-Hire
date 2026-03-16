@@ -17,6 +17,7 @@ type JobDetailsShape = {
   status: "OPEN" | "CLOSED";
   workMode: "REMOTE" | "ONSITE" | "HYBRID" | "OTHER" | null;
   workModeOther: string | null;
+  requiredYearsOfExperience: number | null;
 };
 
 export function JobDetailsForm({
@@ -35,6 +36,9 @@ export function JobDetailsForm({
   const [status, setStatus] = useState<"OPEN" | "CLOSED">(job.status ?? "OPEN");
   const [workMode, setWorkMode] = useState<"REMOTE" | "ONSITE" | "HYBRID" | "OTHER" | "">(job.workMode ?? "");
   const [workModeOther, setWorkModeOther] = useState(job.workModeOther ?? "");
+  const [requiredYears, setRequiredYears] = useState(
+    job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : ""
+  );
   const [locationSuggestions, setLocationSuggestions] = useState<
     Array<{ label: string; value: string; type: "city" | "country" }>
   >([]);
@@ -48,6 +52,7 @@ export function JobDetailsForm({
     status: job.status ?? "OPEN",
     workMode: job.workMode ?? "",
     workModeOther: (job.workModeOther ?? "").trim(),
+    requiredYears: job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "",
   });
 
   const currentSnapshot = JSON.stringify({
@@ -57,6 +62,7 @@ export function JobDetailsForm({
     status,
     workMode: workMode || "",
     workModeOther: workMode === "OTHER" ? workModeOther.trim() : "",
+    requiredYears: requiredYears.trim(),
   });
 
   const dirty = currentSnapshot !== originalSnapshot;
@@ -80,6 +86,7 @@ export function JobDetailsForm({
           status,
           workMode: workMode || null,
           workModeOther: workMode === "OTHER" ? workModeOther.trim() || null : null,
+          requiredYearsOfExperience: requiredYears.trim() ? Number(requiredYears.trim()) : null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -229,6 +236,24 @@ export function JobDetailsForm({
               placeholder="Enter custom work mode"
             />
           ) : null}
+        </div>
+
+        <div>
+          <div className="text-sm text-muted-foreground">
+            Min. years of experience (optional)
+          </div>
+          <Input
+            type="number"
+            min={0}
+            max={50}
+            className="mt-2 rounded-2xl"
+            value={requiredYears}
+            onChange={(e) => setRequiredYears(e.target.value)}
+            placeholder="e.g. 3"
+          />
+          <div className="mt-1 text-xs text-muted-foreground">
+            Affects match score: 60% skills + 40% experience when set.
+          </div>
         </div>
       </div>
 

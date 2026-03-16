@@ -17,21 +17,40 @@ type MatchComputation = {
   matched: string[];
   missing: string[];
   missingCritical: string[];
+  experienceScore: number | null;
   status: MatchStatus;
   statusUpdatedAt: Date | null;
   statusUpdatedBy: string | null;
 };
 
 async function getJobRequirements(jobId: string) {
-  const jobSkills = await prisma.jobSkill.findMany({
-    where: { jobId },
-    include: { skill: true },
-  });
+  const [jobSkills, job] = await Promise.all([
+    prisma.jobSkill.findMany({
+      where: { jobId },
+      include: { skill: true },
+    }),
+    prisma.job.findUnique({
+      where: { id: jobId },
+      select: { requiredYearsOfExperience: true },
+    }),
+  ]);
 
-  return jobSkills.map((js) => ({
-    name: js.skill.name,
-    weight: js.weight ?? 1,
-  }));
+  return {
+    skills: jobSkills.map((js) => ({
+      name: js.skill.name,
+      weight: js.weight ?? 1,
+    })),
+    requiredYearsOfExperience: job?.requiredYearsOfExperience ?? null,
+  };
+}
+
+function computeExperienceScore(
+  candidateYears: number | null,
+  requiredYears: number | null
+): number | null {
+  if (requiredYears === null) return null; // no requirement — does not affect score
+  if (candidateYears === null) return 0.5; // unknown experience — neutral
+  return Math.min(candidateYears / requiredYears, 1.0);
 }
 
 function computeCandidateMatch(
@@ -39,9 +58,11 @@ function computeCandidateMatch(
     id: string;
     fullName: string;
     email: string | null;
+    yearsOfExperience: number | null;
     skills: Array<{ skill: { name: string } }>;
   },
   required: Array<{ name: string; weight: number }>,
+  requiredYearsOfExperience: number | null,
   preserved?: {
     status: MatchStatus;
     statusUpdatedAt: Date | null;
@@ -55,7 +76,17 @@ function computeCandidateMatch(
   const matchedReq = required.filter((r) => candidateSet.has(r.name));
   const missingReq = required.filter((r) => !candidateSet.has(r.name));
   const matchedWeight = matchedReq.reduce((sum, r) => sum + r.weight, 0);
-  const score = totalWeight === 0 ? 0 : matchedWeight / totalWeight;
+  const skillScore = totalWeight === 0 ? 0 : matchedWeight / totalWeight;
+
+  const experienceScore = computeExperienceScore(
+    candidate.yearsOfExperience,
+    requiredYearsOfExperience
+  );
+
+  // Blend: 60% skills, 40% experience (only when requirement is set)
+  const score = experienceScore !== null
+    ? skillScore * 0.6 + experienceScore * 0.4
+    : skillScore;
 
   return {
     candidateId: candidate.id,
@@ -67,6 +98,7 @@ function computeCandidateMatch(
     matched: matchedReq.map((r) => r.name),
     missing: missingReq.map((r) => r.name),
     missingCritical: missingReq.filter((r) => r.weight >= 4).map((r) => r.name),
+    experienceScore,
     status: preserved?.status ?? MatchStatus.NONE,
     statusUpdatedAt: preserved?.statusUpdatedAt ?? null,
     statusUpdatedBy: preserved?.statusUpdatedBy ?? null,
@@ -74,7 +106,7 @@ function computeCandidateMatch(
 }
 
 export async function recalculateJobMatches(jobId: string, orgId: string) {
-  const required = await getJobRequirements(jobId);
+  const { skills: required, requiredYearsOfExperience } = await getJobRequirements(jobId);
 
   if (required.length === 0) {
     await prisma.matchResult.deleteMany({ where: { jobId, orgId } });
@@ -92,6 +124,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
         id: true,
         fullName: true,
         email: true,
+        yearsOfExperience: true,
         skills: { include: { skill: true } },
       },
       take: MATCH_CANDIDATES_LIMIT,
@@ -119,7 +152,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
   );
 
   const matches = candidates.map((candidate) =>
-    computeCandidateMatch(candidate, required, preservedByCandidate.get(candidate.id))
+    computeCandidateMatch(candidate, required, requiredYearsOfExperience, preservedByCandidate.get(candidate.id))
   );
 
   await prisma.$transaction(async (tx) => {
@@ -141,6 +174,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
           missing: match.missing,
           matchedWeight: match.matchedWeight,
           totalWeight: match.totalWeight,
+          experienceScore: match.experienceScore,
           status: match.status,
           statusUpdatedAt: match.statusUpdatedAt ?? undefined,
           statusUpdatedBy: match.statusUpdatedBy ?? undefined,
@@ -151,6 +185,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
           missing: match.missing,
           matchedWeight: match.matchedWeight,
           totalWeight: match.totalWeight,
+          experienceScore: match.experienceScore,
           status: match.status,
           statusUpdatedAt: match.statusUpdatedAt ?? undefined,
           statusUpdatedBy: match.statusUpdatedBy ?? undefined,
@@ -198,7 +233,7 @@ export async function autoMatchJobToCandidates(jobId: string, orgId: string) {
 // Calculate and save match result
 async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: string) {
   try {
-    const required = await getJobRequirements(jobId);
+    const { skills: required, requiredYearsOfExperience } = await getJobRequirements(jobId);
     if (required.length === 0) {
       await prisma.matchResult.deleteMany({ where: { jobId, candidateId, orgId } });
       return;
@@ -211,6 +246,7 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
           id: true,
           fullName: true,
           email: true,
+          yearsOfExperience: true,
           skills: { include: { skill: true } },
         },
       }),
@@ -222,7 +258,7 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
 
     if (!candidate) return;
 
-    const match = computeCandidateMatch(candidate, required, existing ?? undefined);
+    const match = computeCandidateMatch(candidate, required, requiredYearsOfExperience, existing ?? undefined);
 
     await prisma.matchResult.upsert({
       where: { jobId_candidateId: { jobId, candidateId } },
@@ -235,6 +271,7 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
         missing: match.missing,
         matchedWeight: match.matchedWeight,
         totalWeight: match.totalWeight,
+        experienceScore: match.experienceScore,
         status: match.status,
         statusUpdatedAt: match.statusUpdatedAt ?? undefined,
         statusUpdatedBy: match.statusUpdatedBy ?? undefined,
@@ -245,6 +282,7 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
         missing: match.missing,
         matchedWeight: match.matchedWeight,
         totalWeight: match.totalWeight,
+        experienceScore: match.experienceScore,
         status: match.status,
         statusUpdatedAt: match.statusUpdatedAt ?? undefined,
         statusUpdatedBy: match.statusUpdatedBy ?? undefined,

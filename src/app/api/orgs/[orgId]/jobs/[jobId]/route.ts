@@ -51,6 +51,12 @@ export const PATCH = createRoute(
     const workModeOther =
       normalizedWorkMode === "OTHER" ? workModeOtherRaw || "Other" : null;
 
+    const yearsRaw = body?.requiredYearsOfExperience;
+    const requiredYearsOfExperience =
+      yearsRaw === null || yearsRaw === undefined || yearsRaw === ""
+        ? null
+        : Math.max(0, Math.trunc(Number(yearsRaw)));
+
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
@@ -65,6 +71,7 @@ export const PATCH = createRoute(
         status: true,
         workMode: true,
         workModeOther: true,
+        requiredYearsOfExperience: true,
       },
     });
 
@@ -81,6 +88,7 @@ export const PATCH = createRoute(
         status: normalizedStatus,
         workMode: normalizedWorkMode,
         workModeOther,
+        requiredYearsOfExperience,
       },
       select: {
         id: true,
@@ -90,6 +98,7 @@ export const PATCH = createRoute(
         status: true,
         workMode: true,
         workModeOther: true,
+        requiredYearsOfExperience: true,
         createdAt: true,
       },
     });
@@ -114,6 +123,7 @@ export const PATCH = createRoute(
     if (job.status !== updated.status) changedFields.push("status");
     if ((job.workMode ?? null) !== (updated.workMode ?? null)) changedFields.push("workMode");
     if ((job.workModeOther ?? null) !== (updated.workModeOther ?? null)) changedFields.push("workModeOther");
+    if ((job.requiredYearsOfExperience ?? null) !== (updated.requiredYearsOfExperience ?? null)) changedFields.push("requiredYearsOfExperience");
 
     await logJobPageAudit({
       orgId: orgId!,

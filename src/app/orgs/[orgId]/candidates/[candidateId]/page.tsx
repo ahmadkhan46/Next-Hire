@@ -106,11 +106,12 @@ export default async function CandidateDetailPage({
         select: {
           id: true,
           score: true,
+          experienceScore: true,
           status: true,
           statusUpdatedAt: true,
           matched: true,
           missing: true,
-          job: { select: { id: true, title: true, location: true, status: true } },
+          job: { select: { id: true, title: true, location: true, status: true, requiredYearsOfExperience: true } },
         },
         orderBy: { score: "desc" },
         take: 10,
@@ -681,6 +682,7 @@ export default async function CandidateDetailPage({
         initialMatches={candidate.matches.map((m) => ({
           id: m.id,
           score: m.score,
+          experienceScore: m.experienceScore ?? null,
           status: m.status,
           statusUpdatedAt: m.statusUpdatedAt ? m.statusUpdatedAt.toISOString() : null,
           job: m.job
@@ -689,6 +691,7 @@ export default async function CandidateDetailPage({
                 title: m.job.title,
                 location: m.job.location,
                 status: m.job.status,
+                requiredYearsOfExperience: m.job.requiredYearsOfExperience ?? null,
               }
             : null,
         }))}

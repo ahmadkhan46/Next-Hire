@@ -51,6 +51,7 @@ export const GET = createProtectedRoute(
         select: {
           id: true,
           score: true,
+          experienceScore: true,
           status: true,
           statusUpdatedAt: true,
           job: {
@@ -59,6 +60,7 @@ export const GET = createProtectedRoute(
               title: true,
               location: true,
               status: true,
+              requiredYearsOfExperience: true,
             },
           },
         },
