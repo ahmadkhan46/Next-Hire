@@ -73,12 +73,6 @@ export default async function OrgDashboardPage({
                 >
                   Launch Dashboard
                 </Link>
-                <Link
-                  href="/orgs/demo"
-                  className="rounded-2xl px-7 py-3 text-sm font-semibold prestige-stroke text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  View Demo
-                </Link>
               </div>
             </div>
 

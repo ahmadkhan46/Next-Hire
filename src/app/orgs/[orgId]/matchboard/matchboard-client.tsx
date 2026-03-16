@@ -436,7 +436,7 @@ export function MatchboardClient({
 
       <Separator className="my-5" />
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3">
         <div className="relative w-full md:w-80">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -447,45 +447,54 @@ export function MatchboardClient({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border bg-muted/60 px-3 py-1.5 text-xs font-medium text-muted-foreground">
             {filtered.length} of {matches.length} candidates
+          </span>
+
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="h-8 appearance-none rounded-full border bg-background px-3 pr-7 text-xs font-medium outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+            >
+              <option value="ALL">All statuses</option>
+              <option value="NONE">Unreviewed</option>
+              <option value="SHORTLISTED">Shortlisted</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="h-9 w-full rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto md:max-w-[220px]"
-          >
-            <option value="ALL">All statuses</option>
-            <option value="NONE">Unreviewed</option>
-            <option value="SHORTLISTED">Shortlisted</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
+          <div className="relative">
+            <select
+              value={expRange}
+              onChange={(e) => setExpRange(e.target.value as any)}
+              className="h-8 appearance-none rounded-full border bg-background px-3 pr-7 text-xs font-medium outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+            >
+              <option value="ALL">All experience</option>
+              <option value="0-2">0 – 2 yrs</option>
+              <option value="3-5">3 – 5 yrs</option>
+              <option value="6-10">6 – 10 yrs</option>
+              <option value="10+">10+ yrs</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+          </div>
 
-          <select
-            value={expRange}
-            onChange={(e) => setExpRange(e.target.value as any)}
-            className="h-9 w-full rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto md:max-w-[220px]"
-          >
-            <option value="ALL">All experience</option>
-            <option value="0-2">0 – 2 years</option>
-            <option value="3-5">3 – 5 years</option>
-            <option value="6-10">6 – 10 years</option>
-            <option value="10+">10+ years</option>
-          </select>
-
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as any)}
-            className="h-9 w-full rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto md:max-w-[220px]"
-          >
-            <option value="score">Sort: score</option>
-            <option value="experience">Sort: most experience</option>
-            <option value="critical">Sort: critical gaps</option>
-            <option value="missingCount">Sort: total missing</option>
-            <option value="unreviewedFirst">Sort: unreviewed first</option>
-          </select>
+          <div className="relative">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as any)}
+              className="h-8 appearance-none rounded-full border bg-background px-3 pr-7 text-xs font-medium outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+            >
+              <option value="experience">Most experience</option>
+              <option value="score">Best score</option>
+              <option value="critical">Critical gaps</option>
+              <option value="missingCount">Most missing</option>
+              <option value="unreviewedFirst">Unreviewed first</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+          </div>
         </div>
       </div>
 

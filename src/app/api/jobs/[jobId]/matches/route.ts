@@ -68,6 +68,7 @@ export async function GET(req: Request, context: Context) {
         id: true,
         candidateId: true,
         score: true,
+        experienceScore: true,
         matchedWeight: true,
         totalWeight: true,
         matched: true,

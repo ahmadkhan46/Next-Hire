@@ -6,6 +6,7 @@ import { ArrowUpRight, SlidersHorizontal } from "lucide-react";
 import { JobSkillsEditor } from "./skills-editor";
 import { JobDetailsForm } from "./job-details-form";
 import { JobDeleteButton } from "./job-delete-button";
+import { JobRerunButton } from "./job-rerun-button";
 import { JobAuditTimeline } from "./job-audit-timeline";
 import { fetchJobAuditEvents } from "@/lib/job-audit";
 
@@ -90,6 +91,7 @@ export default async function JobSkillsPage({
             Open Matchboard <ArrowUpRight className="h-4 w-4" />
           </Link>
 
+          <JobRerunButton jobId={jobId} />
           <JobDeleteButton orgId={orgId} jobId={jobId} jobTitle={job.title} />
         </div>
       </div>
