@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import JSZip from "jszip";
@@ -43,6 +45,7 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
   const [extractedTexts, setExtractedTexts] = React.useState<Record<string, string>>({});
   const [extractingText, setExtractingText] = React.useState(false);
   const [correlationId, setCorrelationId] = React.useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [jobs, setJobs] = React.useState<Array<{ id: string; title: string; status: string }>>([]);
   const [targetJobId, setTargetJobId] = React.useState<string>("none");
   const [history, setHistory] = React.useState<
@@ -476,12 +479,51 @@ export function BulkResumeUpload({ orgId }: { orgId: string }) {
           <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
             <Button
               className="rounded-2xl"
-              onClick={uploadAll}
+              onClick={() => {
+                if (duplicateMode === "update") {
+                  setConfirmOpen(true);
+                } else {
+                  uploadAll();
+                }
+              }}
               disabled={busy || !files.length || extracting || extractingText}
             >
               {busy ? "Uploading..." : "Upload & Parse"}
             </Button>
           </div>
+
+          <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <DialogContent className="max-w-md rounded-2xl">
+              <DialogHeader>
+                <DialogTitle>Update existing candidates?</DialogTitle>
+                <DialogDescription>
+                  You have selected <span className="font-medium text-foreground">Update existing candidate</span>. If any of the uploaded resumes match a candidate already in the system, their profile will be fully overwritten and their previous resume replaced with the new one.
+                  <br /><br />
+                  This cannot be undone. Are you sure you want to continue?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  className="rounded-2xl"
+                  onClick={() => setConfirmOpen(false)}
+                  disabled={busy}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="rounded-2xl"
+                  onClick={() => {
+                    setConfirmOpen(false);
+                    uploadAll();
+                  }}
+                  disabled={busy}
+                >
+                  Yes, proceed
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           {busy ? (
             <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-slate-500" />

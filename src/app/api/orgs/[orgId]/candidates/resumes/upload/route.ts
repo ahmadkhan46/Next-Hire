@@ -289,6 +289,8 @@ export const POST = createRoute(
 
       // Duplicate — update (enrich with LLM)
       if (existing) {
+        // Replace old resumes so the candidate always has one current resume
+        await prisma.resume.deleteMany({ where: { candidateId: existing.id } });
         const resume = await prisma.resume.create({
           data: {
             candidateId: existing.id,
