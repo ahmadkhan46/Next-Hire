@@ -105,7 +105,7 @@ export function MatchboardClient({
   const [statusBusyIds, setStatusBusyIds] = React.useState<Set<string>>(new Set());
   const [sort, setSort] = React.useState<
     "score" | "experience" | "critical" | "missingCount" | "unreviewedFirst"
-  >("score");
+  >("experience");
   const [statusFilter, setStatusFilter] = React.useState<
     "ALL" | "NONE" | "SHORTLISTED" | "REJECTED"
   >("ALL");

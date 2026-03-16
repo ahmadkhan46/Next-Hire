@@ -353,7 +353,7 @@ export function JobDetailsForm({
               />
               <div className="mt-1 text-xs text-muted-foreground">
                 Required. Use 0 for no minimum. Candidates below this are disqualified.
-                Scoring: 40% experience + 40% skills + 20% projects.
+                Scoring: 60% experience + 30% skills + 10% projects.
               </div>
             </>
           ) : (

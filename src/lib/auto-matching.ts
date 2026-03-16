@@ -53,8 +53,9 @@ async function getJobRequirements(jobId: string) {
  * When job HAS experience requirement:
  *   – Hard filter: candidate years KNOWN and < required → score = 0 (disqualified)
  *   – Unknown years (null) → neutral, treated as meeting requirement
- *   – Qualified → score = expBonus * 0.40 + skillScore * 0.40 + projectScore * 0.20
+ *   – Qualified → score = expBonus * 0.60 + skillScore * 0.30 + projectScore * 0.10
  *     where expBonus rewards years beyond the minimum (up to +5 above req = full bonus)
+ *     Experience is the primary criteria — more years always scores higher.
  *
  * Projects: min(projectCount / 5, 1.0)  — 5+ projects = full project score
  */
@@ -110,7 +111,7 @@ function computeCandidateMatch(
           1.0
         );
       }
-      score = experienceScore * 0.4 + skillScore * 0.4 + projectScore * 0.2;
+      score = experienceScore * 0.6 + skillScore * 0.3 + projectScore * 0.1;
     }
   }
 
