@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Briefcase, Sparkles, BarChart3 } from "lucide-react";
+import { Briefcase, Sparkles } from "lucide-react";
 import { MatchboardClient } from "./matchboard-client";
-import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 
 export default async function MatchboardPage({
   params,
@@ -75,19 +74,6 @@ export default async function MatchboardPage({
             </div>
           </div>
         </div>
-
-        {/* Analytics Section */}
-        {initialJobId && (
-          <div className="premium-block prestige-card rounded-[28px] p-5 sm:p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-white">
-                <BarChart3 className="h-5 w-5" />
-              </div>
-              <h2 className="text-xl font-semibold text-slate-900">Job Analytics</h2>
-            </div>
-            <AnalyticsDashboard orgId={orgId} jobId={initialJobId} />
-          </div>
-        )}
 
         {/* Matchboard Client */}
         {jobs.length === 0 ? (

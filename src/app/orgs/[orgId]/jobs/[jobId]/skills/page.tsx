@@ -90,7 +90,7 @@ export default async function JobSkillsPage({
             Open Matchboard <ArrowUpRight className="h-4 w-4" />
           </Link>
 
-          <JobDeleteButton orgId={orgId} jobId={jobId} />
+          <JobDeleteButton orgId={orgId} jobId={jobId} jobTitle={job.title} />
         </div>
       </div>
 
