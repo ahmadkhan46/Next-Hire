@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Pencil, X, Check } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,12 +33,14 @@ export function JobDetailsForm({
 
   const [title, setTitle] = useState(job.title ?? "");
   const [description, setDescription] = useState(job.description ?? "");
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(job.description ?? "");
   const [location, setLocation] = useState(job.location ?? "");
   const [status, setStatus] = useState<"OPEN" | "CLOSED">(job.status ?? "OPEN");
   const [workMode, setWorkMode] = useState<"REMOTE" | "ONSITE" | "HYBRID" | "OTHER" | "">(job.workMode ?? "");
   const [workModeOther, setWorkModeOther] = useState(job.workModeOther ?? "");
   const [requiredYears, setRequiredYears] = useState(
-    job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : ""
+    job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "0"
   );
   const [locationSuggestions, setLocationSuggestions] = useState<
     Array<{ label: string; value: string; type: "city" | "country" }>
@@ -52,7 +55,7 @@ export function JobDetailsForm({
     status: job.status ?? "OPEN",
     workMode: job.workMode ?? "",
     workModeOther: (job.workModeOther ?? "").trim(),
-    requiredYears: job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "",
+    requiredYears: job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "0",
   });
 
   const currentSnapshot = JSON.stringify({
@@ -74,6 +77,12 @@ export function JobDetailsForm({
       return;
     }
 
+    const yearsNum = Number(requiredYears.trim());
+    if (!requiredYears.trim() || !Number.isFinite(yearsNum) || yearsNum < 0) {
+      toast.error("Min. years of experience is required (use 0 if none)");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`/api/orgs/${orgId}/jobs/${job.id}`, {
@@ -86,7 +95,7 @@ export function JobDetailsForm({
           status,
           workMode: workMode || null,
           workModeOther: workMode === "OTHER" ? workModeOther.trim() || null : null,
-          requiredYearsOfExperience: requiredYears.trim() ? Number(requiredYears.trim()) : null,
+          requiredYearsOfExperience: yearsNum,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -146,14 +155,56 @@ export function JobDetailsForm({
           />
         </div>
 
+        {/* Description — read-only by default, edit button to open inline editor */}
         <div className="md:col-span-2">
-          <div className="text-sm text-muted-foreground">Description (optional)</div>
-          <Textarea
-            className="mt-2 min-h-[120px] rounded-2xl"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Next.js + TS + Tailwind..."
-          />
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">Description</div>
+            {!editingDescription ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setDescriptionDraft(description);
+                  setEditingDescription(true);
+                }}
+                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent/60 transition"
+              >
+                <Pencil className="h-3 w-3" /> Edit
+              </button>
+            ) : (
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDescription(descriptionDraft);
+                    setEditingDescription(false);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 hover:bg-emerald-100 transition"
+                >
+                  <Check className="h-3 w-3" /> Apply
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingDescription(false)}
+                  className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent/60 transition"
+                >
+                  <X className="h-3 w-3" /> Cancel
+                </button>
+              </div>
+            )}
+          </div>
+          {editingDescription ? (
+            <Textarea
+              className="mt-2 min-h-[120px] rounded-2xl"
+              value={descriptionDraft}
+              onChange={(e) => setDescriptionDraft(e.target.value)}
+              placeholder="Describe the role, responsibilities, and tech stack..."
+              autoFocus
+            />
+          ) : (
+            <div className="mt-2 min-h-[60px] rounded-2xl border bg-background/40 px-3 py-2 text-sm text-muted-foreground whitespace-pre-wrap">
+              {description.trim() || <span className="italic opacity-60">No description yet. Click Edit to add one.</span>}
+            </div>
+          )}
         </div>
 
         <div>
@@ -240,7 +291,7 @@ export function JobDetailsForm({
 
         <div>
           <div className="text-sm text-muted-foreground">
-            Min. years of experience (optional)
+            Min. years of experience <span className="text-destructive">*</span>
           </div>
           <Input
             type="number"
@@ -249,10 +300,11 @@ export function JobDetailsForm({
             className="mt-2 rounded-2xl"
             value={requiredYears}
             onChange={(e) => setRequiredYears(e.target.value)}
-            placeholder="e.g. 3"
+            placeholder="0"
           />
           <div className="mt-1 text-xs text-muted-foreground">
-            Affects match score: 60% skills + 40% experience when set.
+            Required. Use 0 for no minimum. Candidates below this are disqualified.
+            Scoring: 40% experience + 40% skills + 20% projects.
           </div>
         </div>
       </div>
@@ -270,4 +322,3 @@ export function JobDetailsForm({
     </Card>
   );
 }
-

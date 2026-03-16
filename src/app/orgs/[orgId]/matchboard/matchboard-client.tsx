@@ -30,6 +30,8 @@ type MatchRow = {
   fullName: string;
   email?: string | null;
   score: number; // 0..1
+  experienceScore?: number | null;
+  yearsOfExperience?: number | null;
   matched: string[];
   missing: string[];
   missingCritical: string[];
@@ -102,11 +104,12 @@ export function MatchboardClient({
   const [q, setQ] = React.useState("");
   const [statusBusyIds, setStatusBusyIds] = React.useState<Set<string>>(new Set());
   const [sort, setSort] = React.useState<
-    "score" | "critical" | "missingCount" | "unreviewedFirst"
+    "score" | "experience" | "critical" | "missingCount" | "unreviewedFirst"
   >("score");
   const [statusFilter, setStatusFilter] = React.useState<
     "ALL" | "NONE" | "SHORTLISTED" | "REJECTED"
   >("ALL");
+  const [expRange, setExpRange] = React.useState<"ALL" | "0-2" | "3-5" | "6-10" | "10+">("ALL");
   const [bulkBusy, setBulkBusy] = React.useState(false);
   const [history, setHistory] = React.useState<MatchDecisionEntry[]>([]);
   const [historyLoading, setHistoryLoading] = React.useState(false);
@@ -154,6 +157,8 @@ export function MatchboardClient({
         fullName: m.fullName,
         email: m.email ?? null,
         score: Number(m.score ?? 0),
+        experienceScore: m.experienceScore ?? null,
+        yearsOfExperience: m.yearsOfExperience ?? null,
         matched: normalizeArray(m.matched),
         missing: normalizeArray(m.missing),
         missingCritical: normalizeArray(m.missingCritical),
@@ -186,7 +191,20 @@ export function MatchboardClient({
           : statusFilter === "NONE"
           ? m.status === "NONE"
           : m.status === statusFilter;
-      return scoreOk && statusOk;
+
+      const yrs = m.yearsOfExperience ?? null;
+      const expOk =
+        expRange === "ALL"
+          ? true
+          : expRange === "0-2"
+          ? yrs !== null && yrs >= 0 && yrs <= 2
+          : expRange === "3-5"
+          ? yrs !== null && yrs >= 3 && yrs <= 5
+          : expRange === "6-10"
+          ? yrs !== null && yrs >= 6 && yrs <= 10
+          : yrs !== null && yrs > 10;
+
+      return scoreOk && statusOk && expOk;
     });
 
     if (query) {
@@ -207,6 +225,9 @@ export function MatchboardClient({
         const bIsNone = b.status === "NONE";
         if (aIsNone !== bIsNone) return aIsNone ? -1 : 1;
       }
+      if (sort === "experience") {
+        return (b.yearsOfExperience ?? -1) - (a.yearsOfExperience ?? -1);
+      }
       if (sort === "score") return (b.score ?? 0) - (a.score ?? 0);
       if (sort === "critical") {
         return (b.missingCritical?.length ?? 0) - (a.missingCritical?.length ?? 0);
@@ -220,7 +241,7 @@ export function MatchboardClient({
     });
 
     return rows;
-  }, [matches, q, sort, statusFilter, minScorePct]);
+  }, [matches, q, sort, statusFilter, minScorePct, expRange]);
 
   const topMatch = React.useMemo(() => {
     if (filtered.length === 0) return null;
@@ -443,11 +464,24 @@ export function MatchboardClient({
           </select>
 
           <select
+            value={expRange}
+            onChange={(e) => setExpRange(e.target.value as any)}
+            className="h-9 w-full rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto md:max-w-[220px]"
+          >
+            <option value="ALL">All experience</option>
+            <option value="0-2">0 – 2 years</option>
+            <option value="3-5">3 – 5 years</option>
+            <option value="6-10">6 – 10 years</option>
+            <option value="10+">10+ years</option>
+          </select>
+
+          <select
             value={sort}
             onChange={(e) => setSort(e.target.value as any)}
             className="h-9 w-full rounded-xl border bg-background/40 px-3 text-xs outline-none md:w-auto md:max-w-[220px]"
           >
             <option value="score">Sort: score</option>
+            <option value="experience">Sort: most experience</option>
             <option value="critical">Sort: critical gaps</option>
             <option value="missingCount">Sort: total missing</option>
             <option value="unreviewedFirst">Sort: unreviewed first</option>
@@ -537,6 +571,16 @@ export function MatchboardClient({
                       <Badge variant="secondary" className="rounded-full">
                         Score: {scorePct}%
                       </Badge>
+                      {m.yearsOfExperience != null ? (
+                        <Badge variant="outline" className="rounded-full">
+                          {m.yearsOfExperience} yr exp
+                        </Badge>
+                      ) : null}
+                      {m.experienceScore === 0 ? (
+                        <Badge variant="destructive" className="rounded-full">
+                          Below min. exp
+                        </Badge>
+                      ) : null}
                       <Badge variant="outline" className="rounded-full">
                         Missing: {missingCount}
                       </Badge>

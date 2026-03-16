@@ -16,6 +16,20 @@ import { CandidateComparison } from "@/components/candidate-comparison";
 import { categorizeSkill } from "@/lib/skills-taxonomy";
 import { mergeSkillCategory } from "@/lib/skill-category-merge";
 
+function calcExperienceFromHistory(
+  experiences: Array<{ startMonth: Date | string; endMonth: Date | string | null; isCurrent: boolean }>
+): { years: number; months: number } {
+  const now = new Date();
+  let totalMonths = 0;
+  for (const exp of experiences) {
+    const start = new Date(exp.startMonth);
+    const end = exp.isCurrent || !exp.endMonth ? now : new Date(exp.endMonth);
+    const diff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    if (diff > 0) totalMonths += diff;
+  }
+  return { years: Math.floor(totalMonths / 12), months: totalMonths % 12 };
+}
+
 export default async function CandidateDetailPage({
   params,
 }: {
@@ -554,6 +568,14 @@ export default async function CandidateDetailPage({
               <div className="text-sm text-muted-foreground">Experience</div>
               <div className="text-lg font-semibold">Work history</div>
             </div>
+            {candidate.experiences.length > 0 ? (() => {
+              const { years, months } = calcExperienceFromHistory(candidate.experiences);
+              return (
+                <div className="ml-auto rounded-full border bg-background/60 px-3 py-1 text-xs text-muted-foreground">
+                  Total: {years > 0 ? `${years} yr${years !== 1 ? "s" : ""}` : ""}{years > 0 && months > 0 ? " " : ""}{months > 0 ? `${months} mo` : ""}{years === 0 && months === 0 ? "< 1 mo" : ""}
+                </div>
+              );
+            })() : null}
           </div>
 
           <Separator className="my-4" />

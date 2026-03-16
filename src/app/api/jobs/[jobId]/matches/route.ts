@@ -75,7 +75,7 @@ export async function GET(req: Request, context: Context) {
         status: true,
         statusUpdatedAt: true,
         statusUpdatedBy: true,
-        candidate: { select: { fullName: true, email: true } },
+        candidate: { select: { fullName: true, email: true, yearsOfExperience: true } },
       },
     });
 
@@ -87,7 +87,9 @@ export async function GET(req: Request, context: Context) {
       candidateId: r.candidateId,
       fullName: r.candidate.fullName,
       email: r.candidate.email,
+      yearsOfExperience: r.candidate.yearsOfExperience,
       score: r.score,
+      experienceScore: r.experienceScore,
       matchedWeight: r.matchedWeight,
       totalWeight: r.totalWeight,
       matched: r.matched,

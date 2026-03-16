@@ -44,21 +44,27 @@ async function getJobRequirements(jobId: string) {
   };
 }
 
-function computeExperienceScore(
-  candidateYears: number | null,
-  requiredYears: number | null
-): number | null {
-  if (requiredYears === null) return null; // no requirement — does not affect score
-  if (candidateYears === null) return 0.5; // unknown experience — neutral
-  return Math.min(candidateYears / requiredYears, 1.0);
-}
-
+/**
+ * Scoring formula:
+ *
+ * When job has NO experience requirement:
+ *   score = skillScore * 0.80 + projectScore * 0.20
+ *
+ * When job HAS experience requirement:
+ *   – Hard filter: candidate years KNOWN and < required → score = 0 (disqualified)
+ *   – Unknown years (null) → neutral, treated as meeting requirement
+ *   – Qualified → score = expBonus * 0.40 + skillScore * 0.40 + projectScore * 0.20
+ *     where expBonus rewards years beyond the minimum (up to +5 above req = full bonus)
+ *
+ * Projects: min(projectCount / 5, 1.0)  — 5+ projects = full project score
+ */
 function computeCandidateMatch(
   candidate: {
     id: string;
     fullName: string;
     email: string | null;
     yearsOfExperience: number | null;
+    projectCount: number;
     skills: Array<{ skill: { name: string } }>;
   },
   required: Array<{ name: string; weight: number }>,
@@ -78,15 +84,35 @@ function computeCandidateMatch(
   const matchedWeight = matchedReq.reduce((sum, r) => sum + r.weight, 0);
   const skillScore = totalWeight === 0 ? 0 : matchedWeight / totalWeight;
 
-  const experienceScore = computeExperienceScore(
-    candidate.yearsOfExperience,
-    requiredYearsOfExperience
-  );
+  const projectScore = Math.min(candidate.projectCount / 5, 1.0);
 
-  // Blend: 60% skills, 40% experience (only when requirement is set)
-  const score = experienceScore !== null
-    ? skillScore * 0.6 + experienceScore * 0.4
-    : skillScore;
+  let experienceScore: number | null = null;
+  let score: number;
+
+  if (requiredYearsOfExperience === null) {
+    // No requirement — skills + projects only
+    score = skillScore * 0.8 + projectScore * 0.2;
+  } else {
+    const candidateYears = candidate.yearsOfExperience;
+
+    // Hard disqualification: known years below minimum
+    if (candidateYears !== null && candidateYears < requiredYearsOfExperience) {
+      experienceScore = 0;
+      score = 0;
+    } else {
+      // Qualified (or unknown years — neutral)
+      if (candidateYears === null) {
+        experienceScore = 0.5; // unknown — neutral
+      } else {
+        // Reward years beyond the minimum; full bonus at req + 5 years
+        experienceScore = Math.min(
+          candidateYears / (requiredYearsOfExperience + 5),
+          1.0
+        );
+      }
+      score = experienceScore * 0.4 + skillScore * 0.4 + projectScore * 0.2;
+    }
+  }
 
   return {
     candidateId: candidate.id,
@@ -126,6 +152,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
         email: true,
         yearsOfExperience: true,
         skills: { include: { skill: true } },
+        _count: { select: { projects: true } },
       },
       take: MATCH_CANDIDATES_LIMIT,
     }),
@@ -152,7 +179,12 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
   );
 
   const matches = candidates.map((candidate) =>
-    computeCandidateMatch(candidate, required, requiredYearsOfExperience, preservedByCandidate.get(candidate.id))
+    computeCandidateMatch(
+      { ...candidate, projectCount: candidate._count.projects },
+      required,
+      requiredYearsOfExperience,
+      preservedByCandidate.get(candidate.id)
+    )
   );
 
   await prisma.$transaction(async (tx) => {
@@ -248,6 +280,7 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
           email: true,
           yearsOfExperience: true,
           skills: { include: { skill: true } },
+          _count: { select: { projects: true } },
         },
       }),
       prisma.matchResult.findUnique({
@@ -258,7 +291,12 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
 
     if (!candidate) return;
 
-    const match = computeCandidateMatch(candidate, required, requiredYearsOfExperience, existing ?? undefined);
+    const match = computeCandidateMatch(
+      { ...candidate, projectCount: candidate._count.projects },
+      required,
+      requiredYearsOfExperience,
+      existing ?? undefined
+    );
 
     await prisma.matchResult.upsert({
       where: { jobId_candidateId: { jobId, candidateId } },
