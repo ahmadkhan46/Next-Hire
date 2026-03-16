@@ -6,7 +6,7 @@
     "dev": "next dev",
     "dev:reset": "node scripts/dev-reset.mjs",
     "dev:fresh": "npm run dev:reset && npm run dev",
-    "build": "prisma generate && next build",
+    "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "locations:build": "tsx scripts/build-locations-data.ts",
