@@ -57,15 +57,50 @@ async function getJobRequirements(jobId: string) {
  *     where expBonus rewards years beyond the minimum (up to +5 above req = full bonus)
  *     Experience is the primary criteria — more years always scores higher.
  *
- * Projects: min(projectCount / 5, 1.0)  — 5+ projects = full project score
+ * Projects: scored by tech stack relevance to job requirements.
+ *   70% of project score = fraction of required skills found in any project's tech stack.
+ *   30% of project score = count bonus (min(projects / 5, 1.0)).
+ *   Falls back to count-only when no tech stack data is available.
  */
+function computeProjectScore(
+  projects: Array<{ techStack: string | null }>,
+  required: Array<{ name: string; weight: number }>
+): number {
+  const count = projects.length;
+  if (count === 0) return 0;
+
+  const countBonus = Math.min(count / 5, 1.0);
+
+  // Flatten all tech stack tokens across all projects into one set
+  const techSet = new Set<string>();
+  for (const p of projects) {
+    if (!p.techStack) continue;
+    p.techStack
+      .split(/[,;|/\n]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+      .forEach((s) => techSet.add(s));
+  }
+
+  if (techSet.size === 0 || required.length === 0) return countBonus;
+
+  // What fraction of required skills appear in any project tech stack
+  const matched = required.filter((r) => {
+    const name = r.name.toLowerCase();
+    return techSet.has(name) || [...techSet].some((t) => t.includes(name) || name.includes(t));
+  });
+  const relevance = matched.length / required.length;
+
+  return relevance * 0.7 + countBonus * 0.3;
+}
+
 function computeCandidateMatch(
   candidate: {
     id: string;
     fullName: string;
     email: string | null;
     yearsOfExperience: number | null;
-    projectCount: number;
+    projects: Array<{ techStack: string | null }>;
     skills: Array<{ skill: { name: string } }>;
   },
   required: Array<{ name: string; weight: number }>,
@@ -85,7 +120,7 @@ function computeCandidateMatch(
   const matchedWeight = matchedReq.reduce((sum, r) => sum + r.weight, 0);
   const skillScore = totalWeight === 0 ? 0 : matchedWeight / totalWeight;
 
-  const projectScore = Math.min(candidate.projectCount / 5, 1.0);
+  const projectScore = computeProjectScore(candidate.projects, required);
 
   let experienceScore: number | null = null;
   let score: number;
@@ -153,7 +188,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
         email: true,
         yearsOfExperience: true,
         skills: { include: { skill: true } },
-        _count: { select: { projects: true } },
+        projects: { select: { techStack: true } },
       },
       take: MATCH_CANDIDATES_LIMIT,
     }),
@@ -181,7 +216,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
 
   const matches = candidates.map((candidate) =>
     computeCandidateMatch(
-      { ...candidate, projectCount: candidate._count.projects },
+      candidate,
       required,
       requiredYearsOfExperience,
       preservedByCandidate.get(candidate.id)
@@ -281,7 +316,7 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
           email: true,
           yearsOfExperience: true,
           skills: { include: { skill: true } },
-          _count: { select: { projects: true } },
+          projects: { select: { techStack: true } },
         },
       }),
       prisma.matchResult.findUnique({
@@ -293,7 +328,7 @@ async function calculateAndSaveMatch(jobId: string, candidateId: string, orgId: 
     if (!candidate) return;
 
     const match = computeCandidateMatch(
-      { ...candidate, projectCount: candidate._count.projects },
+      candidate,
       required,
       requiredYearsOfExperience,
       existing ?? undefined
