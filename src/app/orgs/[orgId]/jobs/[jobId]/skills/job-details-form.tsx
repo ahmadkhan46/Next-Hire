@@ -34,7 +34,6 @@ export function JobDetailsForm({
   const [title, setTitle] = useState(job.title ?? "");
   const [description, setDescription] = useState(job.description ?? "");
   const [editingDescription, setEditingDescription] = useState(false);
-  const [descriptionDraft, setDescriptionDraft] = useState(job.description ?? "");
   const [location, setLocation] = useState(job.location ?? "");
   const [status, setStatus] = useState<"OPEN" | "CLOSED">(job.status ?? "OPEN");
   const [workMode, setWorkMode] = useState<"REMOTE" | "ONSITE" | "HYBRID" | "OTHER" | "">(job.workMode ?? "");
@@ -101,6 +100,7 @@ export function JobDetailsForm({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Failed to update job");
 
+      setEditingDescription(false);
       toast.success("Job details updated");
       router.refresh();
     } catch (e: any) {
@@ -155,61 +155,46 @@ export function JobDetailsForm({
           />
         </div>
 
-        {/* Description — read-only by default, pencil icon to open inline editor */}
+        {/* Description — locked until Edit is pressed */}
         <div className="md:col-span-2">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">Description</div>
-            {!editingDescription ? (
-              <Button
+            {editingDescription ? (
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="rounded-2xl text-muted-foreground"
                 onClick={() => {
-                  setDescriptionDraft(description);
-                  setEditingDescription(true);
+                  setDescription(job.description ?? "");
+                  setEditingDescription(false);
                 }}
+                className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60"
               >
-                <Pencil className="h-3.5 w-3.5" />
-                Edit
-              </Button>
+                <X className="h-4 w-4" />
+                Cancel edit
+              </button>
             ) : (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  className="rounded-2xl"
-                  onClick={() => {
-                    setDescription(descriptionDraft);
-                    setEditingDescription(false);
-                  }}
-                >
-                  Apply
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="rounded-2xl"
-                  onClick={() => setEditingDescription(false)}
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Cancel
-                </Button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setEditingDescription(true)}
+                className="inline-flex items-center gap-2 rounded-2xl border bg-card/60 px-4 py-2 text-sm transition hover:bg-accent/60"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </button>
             )}
           </div>
           {editingDescription ? (
             <Textarea
               className="mt-2 min-h-[120px] rounded-2xl"
-              value={descriptionDraft}
-              onChange={(e) => setDescriptionDraft(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the role, responsibilities, and tech stack..."
               autoFocus
             />
           ) : (
-            <div className="mt-2 min-h-[64px] rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-              {description.trim() || <span className="italic opacity-50">No description yet. Click Edit to add one.</span>}
+            <div className="mt-2 min-h-[64px] cursor-default rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed select-none">
+              {description.trim() || (
+                <span className="italic opacity-50">No description yet. Click Edit to add one.</span>
+              )}
             </div>
           )}
         </div>

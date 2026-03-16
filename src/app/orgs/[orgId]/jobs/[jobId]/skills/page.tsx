@@ -104,6 +104,7 @@ export default async function JobSkillsPage({
           status: job.status,
           workMode: job.workMode,
           workModeOther: job.workModeOther,
+          requiredYearsOfExperience: job.requiredYearsOfExperience,
         }}
       />
 
