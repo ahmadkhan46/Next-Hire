@@ -583,13 +583,13 @@ export function JobSkillsEditor({
 
         <div className="space-y-3 text-sm text-muted-foreground">
           <div>
-            <span className="font-medium text-foreground">Experience (60%)</span> — primary factor. Candidates below the minimum years are disqualified. More years above the minimum scores higher.
+            <span className="font-medium text-foreground">Skills</span> are the foundation — matched weight / total weight. Skills with weight ≥ 4 are critical; missing them is flagged as a gap.
           </div>
           <div>
-            <span className="font-medium text-foreground">Skills (30%)</span> — matched weight / total weight. Skills with weight ≥ 4 are critical; missing them is flagged as a gap.
+            <span className="font-medium text-foreground">Experience matters too.</span> Candidates below the minimum years set on the job are disqualified entirely. More years above the minimum ranks a candidate higher.
           </div>
           <div>
-            <span className="font-medium text-foreground">Projects (10%)</span> — scored by how many required skills appear in candidates' project tech stacks. A project using React, Node.js, or TypeScript counts toward the job if those skills are required.
+            <span className="font-medium text-foreground">Projects count as well.</span> If a candidate's projects use skills required for this role, that works in their favour — it shows real-world application beyond just listing a skill.
           </div>
           <div className="pt-1 border-t">
             Keep the skill set lean — focus on must-haves, not nice-to-haves.
