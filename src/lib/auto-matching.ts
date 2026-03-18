@@ -18,10 +18,36 @@ type MatchComputation = {
   missing: string[];
   missingCritical: string[];
   experienceScore: number | null;
+  scoredAt: Date;
   status: MatchStatus;
   statusUpdatedAt: Date | null;
   statusUpdatedBy: string | null;
 };
+
+// Common aliases so "node.js" == "nodejs" == "node" etc.
+const SKILL_ALIASES: Record<string, string> = {
+  'node.js': 'node', 'nodejs': 'node',
+  'react.js': 'react',
+  'vue.js': 'vue', 'vuejs': 'vue',
+  'angular.js': 'angular', 'angularjs': 'angular',
+  'next.js': 'nextjs',
+  'nuxt.js': 'nuxtjs',
+  'golang': 'go',
+  'postgresql': 'postgres', 'psql': 'postgres',
+  'mongo': 'mongodb',
+  'k8s': 'kubernetes',
+  'js': 'javascript',
+  'ts': 'typescript',
+  'py': 'python',
+  'rb': 'ruby',
+  'c#': 'csharp', 'c sharp': 'csharp',
+  'c++': 'cpp',
+};
+
+function normalizeSkill(name: string): string {
+  const key = name.toLowerCase().trim();
+  return SKILL_ALIASES[key] ?? key;
+}
 
 async function getJobRequirements(jobId: string) {
   const [jobSkills, job] = await Promise.all([
@@ -71,13 +97,13 @@ function computeProjectScore(
 
   const countBonus = Math.min(count / 5, 1.0);
 
-  // Flatten all tech stack tokens across all projects into one set
+  // Flatten all tech stack tokens across all projects into normalized set
   const techSet = new Set<string>();
   for (const p of projects) {
     if (!p.techStack) continue;
     p.techStack
       .split(/[,;|/\n]+/)
-      .map((s) => s.trim().toLowerCase())
+      .map((s) => normalizeSkill(s))
       .filter(Boolean)
       .forEach((s) => techSet.add(s));
   }
@@ -86,7 +112,7 @@ function computeProjectScore(
 
   // What fraction of required skills appear in any project tech stack
   const matched = required.filter((r) => {
-    const name = r.name.toLowerCase();
+    const name = normalizeSkill(r.name);
     return techSet.has(name) || [...techSet].some((t) => t.includes(name) || name.includes(t));
   });
   const relevance = matched.length / required.length;
@@ -111,12 +137,12 @@ function computeCandidateMatch(
     statusUpdatedBy: string | null;
   }
 ): MatchComputation {
-  const candidateSkills = candidate.skills.map((cs) => cs.skill.name);
+  const candidateSkills = candidate.skills.map((cs) => normalizeSkill(cs.skill.name));
   const candidateSet = new Set(candidateSkills);
   const totalWeight = required.reduce((sum, r) => sum + r.weight, 0);
 
-  const matchedReq = required.filter((r) => candidateSet.has(r.name));
-  const missingReq = required.filter((r) => !candidateSet.has(r.name));
+  const matchedReq = required.filter((r) => candidateSet.has(normalizeSkill(r.name)));
+  const missingReq = required.filter((r) => !candidateSet.has(normalizeSkill(r.name)));
   const matchedWeight = matchedReq.reduce((sum, r) => sum + r.weight, 0);
   const skillScore = totalWeight === 0 ? 0 : matchedWeight / totalWeight;
 
@@ -161,6 +187,7 @@ function computeCandidateMatch(
     missing: missingReq.map((r) => r.name),
     missingCritical: missingReq.filter((r) => r.weight >= 4).map((r) => r.name),
     experienceScore,
+    scoredAt: new Date(),
     status: preserved?.status ?? MatchStatus.NONE,
     statusUpdatedAt: preserved?.statusUpdatedAt ?? null,
     statusUpdatedBy: preserved?.statusUpdatedBy ?? null,
@@ -243,6 +270,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
           matchedWeight: match.matchedWeight,
           totalWeight: match.totalWeight,
           experienceScore: match.experienceScore,
+          scoredAt: match.scoredAt,
           status: match.status,
           statusUpdatedAt: match.statusUpdatedAt ?? undefined,
           statusUpdatedBy: match.statusUpdatedBy ?? undefined,
@@ -254,6 +282,7 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
           matchedWeight: match.matchedWeight,
           totalWeight: match.totalWeight,
           experienceScore: match.experienceScore,
+          scoredAt: match.scoredAt,
           status: match.status,
           statusUpdatedAt: match.statusUpdatedAt ?? undefined,
           statusUpdatedBy: match.statusUpdatedBy ?? undefined,

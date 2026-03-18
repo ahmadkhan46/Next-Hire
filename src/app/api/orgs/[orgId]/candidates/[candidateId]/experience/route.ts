@@ -4,6 +4,25 @@ import { prisma } from '@/lib/prisma';
 import { logCandidateActivity } from '@/lib/candidate-activity';
 import { z } from 'zod';
 
+async function recalcYearsOfExperience(candidateId: string) {
+  const experiences = await prisma.candidateExperience.findMany({
+    where: { candidateId },
+    select: { startMonth: true, endMonth: true, isCurrent: true },
+  });
+  const now = new Date();
+  let totalMonths = 0;
+  for (const exp of experiences) {
+    const start = new Date(exp.startMonth);
+    const end = exp.isCurrent || !exp.endMonth ? now : new Date(exp.endMonth);
+    const diff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    if (diff > 0) totalMonths += diff;
+  }
+  await prisma.candidate.update({
+    where: { id: candidateId },
+    data: { yearsOfExperience: Math.floor(totalMonths / 12) },
+  });
+}
+
 const experienceSchema = z.object({
   company: z.string().min(1).max(200),
   role: z.string().min(1).max(200),
@@ -49,6 +68,8 @@ export const POST = createProtectedRoute(
         bullets: data.bullets || [],
       },
     });
+
+    await recalcYearsOfExperience(candidateId);
 
     await logCandidateActivity({
       orgId,
@@ -105,6 +126,8 @@ export const PATCH = createProtectedRoute(
       },
     });
 
+    await recalcYearsOfExperience(candidateId);
+
     await logCandidateActivity({
       orgId,
       candidateId,
@@ -135,6 +158,7 @@ export const DELETE = createProtectedRoute(
     }
 
     await prisma.candidateExperience.delete({ where: { id: data.id } });
+    await recalcYearsOfExperience(candidateId);
 
     await logCandidateActivity({
       orgId,

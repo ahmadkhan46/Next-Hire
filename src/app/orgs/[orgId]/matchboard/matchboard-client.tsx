@@ -32,6 +32,7 @@ type MatchRow = {
   score: number; // 0..1
   experienceScore?: number | null;
   yearsOfExperience?: number | null;
+  scoredAt?: string | null;
   matched: string[];
   missing: string[];
   missingCritical: string[];
@@ -160,6 +161,7 @@ export function MatchboardClient({
         score: Number(m.score ?? 0),
         experienceScore: m.experienceScore ?? null,
         yearsOfExperience: m.yearsOfExperience ?? null,
+        scoredAt: m.scoredAt ?? null,
         matched: normalizeArray(m.matched),
         missing: normalizeArray(m.missing),
         missingCritical: normalizeArray(m.missingCritical),
@@ -573,8 +575,8 @@ export function MatchboardClient({
                     <div className="text-base font-semibold">{m.fullName}</div>
                     <div className="mt-1 text-xs text-muted-foreground">
                       {m.email ?? "--"}
-                      {m.statusUpdatedAt ? (
-                        <span className="ml-2">Updated {new Date(m.statusUpdatedAt).toLocaleDateString()}</span>
+                      {m.scoredAt ? (
+                        <span className="ml-2 opacity-60">· scored {new Date(m.scoredAt).toLocaleDateString()}</span>
                       ) : null}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
