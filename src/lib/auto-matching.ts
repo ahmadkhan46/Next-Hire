@@ -250,46 +250,46 @@ export async function recalculateJobMatches(jobId: string, orgId: string) {
     )
   );
 
-  await prisma.$transaction(async (tx) => {
-    const candidateIds = matches.map((match) => match.candidateId);
+  const candidateIds = matches.map((match) => match.candidateId);
 
-    await tx.matchResult.deleteMany({
-      where: { jobId, candidateId: { notIn: candidateIds } },
-    });
-
-    for (const match of matches) {
-      await tx.matchResult.upsert({
-        where: { jobId_candidateId: { jobId, candidateId: match.candidateId } },
-        create: {
-          jobId,
-          candidateId: match.candidateId,
-          orgId,
-          score: match.score,
-          matched: match.matched,
-          missing: match.missing,
-          matchedWeight: match.matchedWeight,
-          totalWeight: match.totalWeight,
-          experienceScore: match.experienceScore,
-          scoredAt: match.scoredAt,
-          status: match.status,
-          statusUpdatedAt: match.statusUpdatedAt ?? undefined,
-          statusUpdatedBy: match.statusUpdatedBy ?? undefined,
-        },
-        update: {
-          score: match.score,
-          matched: match.matched,
-          missing: match.missing,
-          matchedWeight: match.matchedWeight,
-          totalWeight: match.totalWeight,
-          experienceScore: match.experienceScore,
-          scoredAt: match.scoredAt,
-          status: match.status,
-          statusUpdatedAt: match.statusUpdatedAt ?? undefined,
-          statusUpdatedBy: match.statusUpdatedBy ?? undefined,
-        },
-      });
-    }
+  // Delete stale results for candidates no longer in scope
+  await prisma.matchResult.deleteMany({
+    where: { jobId, candidateId: { notIn: candidateIds } },
   });
+
+  // Upsert each match sequentially (avoids interactive transaction issues with Neon PgBouncer)
+  for (const match of matches) {
+    await prisma.matchResult.upsert({
+      where: { jobId_candidateId: { jobId, candidateId: match.candidateId } },
+      create: {
+        jobId,
+        candidateId: match.candidateId,
+        orgId,
+        score: match.score,
+        matched: match.matched,
+        missing: match.missing,
+        matchedWeight: match.matchedWeight,
+        totalWeight: match.totalWeight,
+        experienceScore: match.experienceScore,
+        scoredAt: match.scoredAt,
+        status: match.status,
+        statusUpdatedAt: match.statusUpdatedAt ?? undefined,
+        statusUpdatedBy: match.statusUpdatedBy ?? undefined,
+      },
+      update: {
+        score: match.score,
+        matched: match.matched,
+        missing: match.missing,
+        matchedWeight: match.matchedWeight,
+        totalWeight: match.totalWeight,
+        experienceScore: match.experienceScore,
+        scoredAt: match.scoredAt,
+        status: match.status,
+        statusUpdatedAt: match.statusUpdatedAt ?? undefined,
+        statusUpdatedBy: match.statusUpdatedBy ?? undefined,
+      },
+    });
+  }
 
   return {
     required,
