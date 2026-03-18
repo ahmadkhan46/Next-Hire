@@ -545,9 +545,13 @@ export function MatchboardClient({
 
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading...</div>
+      ) : matches.length === 0 ? (
+        <div className="premium-subblock rounded-2xl border border-dashed bg-background/40 p-6 text-sm text-muted-foreground">
+          No matches yet. Click <strong>Re-run</strong> to score all candidates against this job.
+        </div>
       ) : filtered.length === 0 ? (
         <div className="premium-subblock rounded-2xl border border-dashed bg-background/40 p-6 text-sm text-muted-foreground">
-          No candidates meet the current threshold. Try lowering it or re-running the match.
+          No candidates match the current filters. Try lowering the threshold (currently {minScorePct}%) or adjusting the status/experience filters.
         </div>
       ) : (
         <div className="h-[24rem] space-y-3 overflow-y-auto pr-2 inner-scroll">

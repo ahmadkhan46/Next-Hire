@@ -6,7 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { handleAPIError } from "@/lib/errors";
 import { verifyResourceAccess } from "@/lib/api-middleware";
 import { enforcePermission } from "@/lib/rbac";
-import { logJobPageAudit } from "@/lib/job-page-audit";
 import { recalculateJobMatches } from "@/lib/auto-matching";
 
 type Context = { params: Promise<{ jobId: string }> };
@@ -33,21 +32,8 @@ export async function POST(_req: Request, context: Context) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    const { required, matches: matchesWithStatus, candidatesConsidered } =
+    const { required, matches: matchesWithStatus } =
       await recalculateJobMatches(job.id, job.orgId);
-
-    await logJobPageAudit({
-      orgId,
-      jobId,
-      actorId: userId,
-      action: "JOB_MATCHING_RERUN",
-      summary: "Re-ran job matching",
-      metadata: {
-        requiredSkills: required.length,
-        candidatesConsidered,
-        matchesPersisted: matchesWithStatus.length,
-      },
-    });
 
     return NextResponse.json({
       ok: true,

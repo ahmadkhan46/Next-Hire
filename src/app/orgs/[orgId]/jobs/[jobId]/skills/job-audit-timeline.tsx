@@ -35,7 +35,6 @@ function formatAuditAction(action: string) {
   if (action === "JOB_DETAILS_UPDATED") return "Job details updated";
   if (action === "JOB_SKILLS_UPDATED") return "Job skills updated";
   if (action === "JOB_SKILLS_GENERATED") return "Skills generated from description";
-  if (action === "JOB_MATCHING_RERUN") return "Matchboard re-run";
   if (action === "JOB_DELETED") return "Job deleted";
   return action;
 }
@@ -61,12 +60,6 @@ function metadataSummary(action: string, metadata: unknown) {
     const generatedCount = typeof m.generatedCount === "number" ? m.generatedCount : 0;
     const source = typeof m.source === "string" ? m.source : "MANUAL";
     return `Generated ${generatedCount} skills (${source})`;
-  }
-
-  if (action === "JOB_MATCHING_RERUN") {
-    const candidates = typeof m.candidatesConsidered === "number" ? m.candidatesConsidered : 0;
-    const matches = typeof m.matchesPersisted === "number" ? m.matchesPersisted : 0;
-    return `Candidates: ${candidates} | matches persisted: ${matches}`;
   }
 
   return "No details";
@@ -233,7 +226,7 @@ export function JobAuditTimeline({
       </div>
 
       <div className="mb-4 text-sm text-muted-foreground">
-        Tracks details updates, skills changes, generation, and matching runs.
+        Tracks details updates, skills changes, and skill generation events.
       </div>
 
       {filteredEvents.length === 0 ? (
@@ -248,9 +241,6 @@ export function JobAuditTimeline({
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <div className="text-sm font-semibold">{formatAuditAction(event.action)}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {event.summary ?? metadataSummary(event.action, event.metadata)}
-                  </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     {metadataSummary(event.action, event.metadata)}
                   </div>
