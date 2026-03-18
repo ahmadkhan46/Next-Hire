@@ -301,6 +301,7 @@ export default async function UploadHistoryPage({
           const { targetJob, ...rest } = batch;
           return {
             ...rest,
+            uploadedByName: null,
             targetJobTitle: targetJob?.title ?? null,
             createdAt: batch.createdAt.toISOString(),
             startedAt: batch.startedAt?.toISOString() ?? null,
