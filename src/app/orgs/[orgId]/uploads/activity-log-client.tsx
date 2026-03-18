@@ -28,6 +28,7 @@ type Batch = {
   sourceType: string;
   sourceName: string | null;
   uploadedBy: string | null;
+  uploadedByName: string | null;
   targetJobId: string | null;
   targetJobTitle: string | null;
   status: string;
@@ -440,7 +441,7 @@ export function ActivityLogClient({
                     failed: {batch.failedCount}
                   </Badge>
                   <Badge variant="outline" className="rounded-full">
-                    by: {batch.uploadedBy ?? "unknown"}
+                    by: {batch.uploadedByName ?? batch.uploadedBy ?? "unknown"}
                   </Badge>
                   {batch.targetJobId ? (
                     <Badge variant="outline" className="rounded-full">

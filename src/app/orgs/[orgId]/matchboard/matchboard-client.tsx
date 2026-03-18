@@ -46,6 +46,7 @@ type MatchDecisionEntry = {
   toStatus: MatchStatus;
   note?: string | null;
   decidedBy?: string | null;
+  decidedByName?: string | null;
 };
 
 type JobDetail = {
@@ -800,7 +801,7 @@ export function MatchboardClient({
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {new Date(h.createdAt).toLocaleString()}
-                            {h.decidedBy ? ` - ${h.decidedBy}` : ""}
+                            {(h.decidedByName ?? h.decidedBy) ? ` — by ${h.decidedByName ?? h.decidedBy}` : ""}
                           </div>
                         </div>
                         {h.note ? (

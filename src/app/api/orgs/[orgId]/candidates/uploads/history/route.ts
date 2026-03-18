@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createProtectedRoute } from "@/lib/api-middleware";
 import { prisma } from "@/lib/prisma";
+import { resolveActorNames } from "@/lib/job-audit";
 
 export const GET = createProtectedRoute(
   "candidates:read",
@@ -46,6 +47,14 @@ export const GET = createProtectedRoute(
       },
     });
 
-    return NextResponse.json({ batches });
+    const uploaderIds = batches.map((b) => b.uploadedBy).filter(Boolean) as string[];
+    const nameMap = await resolveActorNames(uploaderIds);
+
+    const batchesWithNames = batches.map((b) => ({
+      ...b,
+      uploadedByName: b.uploadedBy ? (nameMap.get(b.uploadedBy) ?? b.uploadedBy) : null,
+    }));
+
+    return NextResponse.json({ batches: batchesWithNames });
   }
 );

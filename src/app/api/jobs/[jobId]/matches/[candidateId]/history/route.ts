@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { verifyResourceAccess } from "@/lib/api-middleware";
+import { resolveActorNames } from "@/lib/job-audit";
 
 type Context = { params: Promise<{ jobId: string; candidateId: string }> };
 
@@ -40,7 +41,15 @@ export async function GET(_req: Request, context: Context) {
       },
     });
 
-    return NextResponse.json({ ok: true, jobId, candidateId, history });
+    const actorIds = history.map((h) => h.decidedBy).filter(Boolean) as string[];
+    const nameMap = await resolveActorNames(actorIds);
+
+    const historyWithNames = history.map((h) => ({
+      ...h,
+      decidedByName: h.decidedBy ? (nameMap.get(h.decidedBy) ?? h.decidedBy) : null,
+    }));
+
+    return NextResponse.json({ ok: true, jobId, candidateId, history: historyWithNames });
   } catch (err: any) {
     console.error(err);
     return NextResponse.json(
