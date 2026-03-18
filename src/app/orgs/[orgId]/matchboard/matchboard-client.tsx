@@ -509,8 +509,17 @@ export function MatchboardClient({
           className="rounded-2xl"
           disabled={bulkBusy}
           onClick={() => {
-            const ids = filtered.filter((m) => (m.score ?? 0) >= 0.8).map((m) => m.candidateId);
-            bulkUpdate("SHORTLISTED", ids, "Auto-shortlist: score >= 80%");
+            // Filter view to 80%+ and shortlist those candidates
+            setMinScorePct(80);
+            setThresholdDraft("80");
+            const ids = matches
+              .filter((m) => Math.round((m.score ?? 0) * 100) >= 80)
+              .map((m) => m.candidateId);
+            if (ids.length > 0) {
+              bulkUpdate("SHORTLISTED", ids, "Auto-shortlist: score >= 80%");
+            } else {
+              toast.info("No candidates with 80%+ match score.");
+            }
           }}
         >
           Shortlist 80%+
