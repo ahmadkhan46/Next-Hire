@@ -38,6 +38,8 @@ vi.mock("@/lib/resume-text-extract", () => ({
 
 vi.mock("@/lib/resume-llm", () => ({
   extractCandidateProfile: vi.fn(),
+  extractCandidateProfilesBatch: vi.fn(),
+  BATCH_LLM_SIZE: 5,
 }));
 
 vi.mock("@/lib/resume-apply", () => ({
