@@ -108,9 +108,6 @@ describe("Bulk resume upload route", () => {
         ok: false,
         status: "FAILED",
         errorCode: "INVALID_MIME",
-        attempts: 1,
-        retryCount: 0,
-        transient: false,
       })
     );
     expect(data.failedFiles).toEqual([
