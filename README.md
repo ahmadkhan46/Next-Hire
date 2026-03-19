@@ -138,50 +138,6 @@ A `/orgs/demo/` route provides a fully functional demo experience with static da
 
 ---
 
-## Getting Started (Local Development)
-
-### Prerequisites
-- Node.js 20+
-- PostgreSQL 15+
-- Redis (for BullMQ)
-
-### Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Fill in: DATABASE_URL, DIRECT_URL, OPENAI_API_KEY, CLERK_*, REDIS_URL, PINECONE_*
-
-# Generate Prisma client
-npx prisma generate
-
-# Apply database migrations
-npx prisma migrate deploy
-
-# Start development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to see the app.
-
-> **Windows note:** Set `PRISMA_CLIENT_ENGINE_TYPE="library"` and `PRISMA_CLI_QUERY_ENGINE_TYPE="library"` in your `.env` files to avoid Windows Defender blocking Prisma's query engine generation.
-
----
-
-## Deployment
-
-NextHire is deployed on Vercel with a Neon PostgreSQL database.
-
-- `DATABASE_URL` — pooled Neon connection (used at runtime)
-- `DIRECT_URL` — non-pooled Neon connection (used by Prisma for migrations)
-- Build command: `prisma generate && next build`
-- Database migrations are applied manually via the Neon SQL Editor (Neon's advisory lock timeout prevents running `migrate deploy` at build time)
-
----
-
 ## License
 
 This project was built as part of a university academic project.
