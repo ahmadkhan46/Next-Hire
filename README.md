@@ -1,6 +1,6 @@
 # NextHire — AI-Powered Talent Intelligence Platform
 
-![CI](https://github.com/ahmadkhan46/Next-Hire/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/ahmadkhan46/Next-Hire/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmadkhan46/Next-Hire/actions/workflows/ci.yml)
 
 **Live Website:** [https://next-hire-blush.vercel.app/](https://next-hire-blush.vercel.app/)
 
