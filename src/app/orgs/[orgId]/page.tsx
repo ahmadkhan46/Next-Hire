@@ -56,20 +56,20 @@ export default async function OrgDashboardPage({
                 AI-POWERED INTELLIGENCE
               </div>
 
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl md:text-6xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black tracking-tight text-slate-900">
                 Recruitment
                 <span className="block prestige-title">Intelligence</span>
               </h1>
 
-              <p className="max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+              <p className="max-w-2xl text-sm sm:text-base md:text-lg leading-relaxed text-slate-600">
                 A precise, elegant command center for hiring teams. Real-time analytics,
                 autonomous matching, and audit-ready compliance in one place.
               </p>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 sm:gap-4">
                 <Link
                   href="#analytics"
-                  className="prestige-accent rounded-2xl px-7 py-3 text-sm font-semibold shadow-lg"
+                  className="prestige-accent rounded-2xl px-5 py-2 sm:px-7 sm:py-3 text-xs sm:text-sm font-semibold shadow-lg"
                 >
                   Launch Dashboard
                 </Link>
@@ -101,81 +101,81 @@ export default async function OrgDashboardPage({
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
-          <div className="premium-block prestige-card rounded-3xl p-7">
-            <div className="flex items-center justify-between gap-6">
-              <div>
+          <div className="premium-block prestige-card rounded-3xl p-4 sm:p-7">
+            <div className="flex items-center justify-between gap-4 sm:gap-6">
+              <div className="min-w-0">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                   Talent Pool
                 </div>
-                <div className="mt-3 text-4xl font-black text-slate-900">
+                <div className="mt-2 sm:mt-3 text-2xl sm:text-4xl font-black text-slate-900">
                   {candidatesCount}
                 </div>
                 <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                   Active Candidates
                 </div>
               </div>
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-900 text-white">
-                <Users className="h-7 w-7" />
+              <div className="grid h-10 w-10 sm:h-14 sm:w-14 place-items-center rounded-2xl bg-slate-900 text-white shrink-0">
+                <Users className="h-5 w-5 sm:h-7 sm:w-7" />
               </div>
             </div>
 
-            <div className="my-6 h-px w-full bg-slate-200" />
+            <div className="my-4 sm:my-6 h-px w-full bg-slate-200" />
 
             <Link
               href={`/orgs/${orgId}/candidates`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900"
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-900"
             >
-              Access Talent Pool <ArrowUpRight className="h-4 w-4" />
+              Access Talent Pool <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </div>
 
-          <div className="premium-block prestige-card rounded-3xl p-7">
-            <div className="flex items-center justify-between gap-6">
-              <div>
+          <div className="premium-block prestige-card rounded-3xl p-4 sm:p-7">
+            <div className="flex items-center justify-between gap-4 sm:gap-6">
+              <div className="min-w-0">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                   Active Jobs
                 </div>
-                <div className="mt-3 text-4xl font-black text-slate-900">
+                <div className="mt-2 sm:mt-3 text-2xl sm:text-4xl font-black text-slate-900">
                   {jobs.length}
                 </div>
                 <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                   Open Positions
                 </div>
               </div>
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-900 text-white">
-                <Briefcase className="h-7 w-7" />
+              <div className="grid h-10 w-10 sm:h-14 sm:w-14 place-items-center rounded-2xl bg-slate-900 text-white shrink-0">
+                <Briefcase className="h-5 w-5 sm:h-7 sm:w-7" />
               </div>
             </div>
 
-            <div className="my-6 h-px w-full bg-slate-200" />
+            <div className="my-4 sm:my-6 h-px w-full bg-slate-200" />
 
             <Link
               href={`/orgs/${orgId}/jobs`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900"
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-900"
             >
-              Manage Jobs <ArrowUpRight className="h-4 w-4" />
+              Manage Jobs <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </div>
 
-          <div className="premium-block prestige-card rounded-3xl p-7">
-            <div className="flex items-center justify-between gap-6">
-              <div>
+          <div className="premium-block prestige-card rounded-3xl p-4 sm:p-7">
+            <div className="flex items-center justify-between gap-4 sm:gap-6">
+              <div className="min-w-0">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                   AI Matching
                 </div>
-                <div className="mt-3 text-4xl font-black text-slate-900">
+                <div className="mt-2 sm:mt-3 text-2xl sm:text-4xl font-black text-slate-900">
                   {avgScore ? `${Math.round(avgScore)}%` : "--"}
                 </div>
                 <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                   Match Score
                 </div>
               </div>
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-900 text-white">
-                <Sparkles className="h-7 w-7" />
+              <div className="grid h-10 w-10 sm:h-14 sm:w-14 place-items-center rounded-2xl bg-slate-900 text-white shrink-0">
+                <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" />
               </div>
             </div>
 
-            <div className="my-6 h-px w-full bg-slate-200" />
+            <div className="my-4 sm:my-6 h-px w-full bg-slate-200" />
 
             {newestJob ? (
               <Link

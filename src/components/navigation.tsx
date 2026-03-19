@@ -110,6 +110,8 @@ export function Navigation() {
                   appearance={{
                     elements: {
                       avatarBox: "h-9 w-9",
+                      footer: "hidden",
+                      footerMainContent: "hidden",
                     },
                   }}
                 />
@@ -150,6 +152,8 @@ export function Navigation() {
                 appearance={{
                   elements: {
                     avatarBox: "h-9 w-9",
+                    footer: "hidden",
+                    footerMainContent: "hidden",
                   },
                 }}
               />

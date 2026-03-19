@@ -13,13 +13,13 @@ export default function SignInPage() {
       <div className="absolute left-[-20px] top-20 tech-orb tech-orb-sm" />
       <div className="absolute right-[-80px] bottom-16 tech-orb" />
 
-      <div className="relative z-10 w-full max-w-lg px-6">
-        <div className="tech-card rounded-[36px] p-10 text-center">
-          <div className="mx-auto mb-6 h-12 w-12 rounded-2xl bg-white/10 grid place-items-center">
-            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500" />
+      <div className="relative z-10 w-full max-w-lg px-4 sm:px-6">
+        <div className="tech-card rounded-2xl sm:rounded-[36px] p-5 sm:p-10 text-center overflow-hidden">
+          <div className="mx-auto mb-4 sm:mb-6 h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-white/10 grid place-items-center">
+            <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500" />
           </div>
-          <h1 className="text-3xl font-black tech-title mb-2">Welcome Back</h1>
-          <p className="tech-muted mb-10">
+          <h1 className="text-2xl sm:text-3xl font-black tech-title mb-2">Welcome Back</h1>
+          <p className="tech-muted text-sm sm:text-base mb-6 sm:mb-10">
             Sign in to access your recruitment intelligence platform.
           </p>
 

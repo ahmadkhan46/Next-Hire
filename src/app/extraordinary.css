@@ -466,3 +466,40 @@
 .tech-auth .cl-socialButtonsBlockButtonText {
   color: #0f172a;
 }
+
+/* Hide Clerk development mode and branding elements */
+.cl-footer,
+.cl-footerMainContent,
+.cl-footerActionLink,
+.cl-footerAction,
+.cl-developmentMode,
+.cl-badge,
+[class*="cl-footer"],
+[class*="cl-Footer"],
+[class*="Footer"],
+.cl-rootBox [class*="footer"],
+.cl-userButtonPopoverFooter,
+.cl-userButtonPopoverFooterAction,
+.cl-popover [class*="footer"],
+.cl-userButtonPopover [class*="footer"],
+.cl-userButton [class*="footer"],
+/* Popover content footer */
+.cl-popover footer,
+.cl-userButtonPopover footer,
+.cl-userButton footer,
+/* General dividers and footer elements */
+.cl-dividerRoot,
+.cl-dividerLine,
+.cl-divider,
+/* Any element that might contain "Secured by" text */
+div[class*="powered"],
+div[class*="Powered"],
+span[class*="powered"],
+span[class*="Powered"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
