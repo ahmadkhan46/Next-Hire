@@ -1,7 +1,9 @@
 # NextHire — AI-Powered Talent Intelligence Platform
 
-**Live Website:** [https://next-hire-blush.vercel.app/](https://next-hire-blush.vercel.app/)
 [![CI](https://github.com/ahmadkhan46/Next-Hire/actions/workflows/ci.yml/badge.svg)]
+
+**Live Website:** [https://next-hire-blush.vercel.app/](https://next-hire-blush.vercel.app/)
+
 NextHire is a production-grade, AI-powered Applicant Tracking System (ATS) built for modern hiring teams. It automates the most time-consuming parts of recruiting — resume parsing, candidate scoring, skill extraction, and matching — so HR professionals can focus on making great hiring decisions rather than processing paperwork.
 
 ---
