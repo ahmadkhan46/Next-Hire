@@ -66,7 +66,6 @@ export default function SignUpPage() {
                     badge__lastUsedContainer: "hidden",
                     socialButtonsBlockButtonBadge: "hidden",
                     socialButtonsBlockButton__lastUsed: "hidden",
-                    footer: "hidden",
                     footerMainContent: "hidden",
                   },
                 }}
