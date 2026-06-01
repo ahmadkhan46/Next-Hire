@@ -8,6 +8,7 @@ import { estimateCost } from "@/lib/llm-cost";
 import { LLMError } from "@/lib/errors";
 import { trackLLMUsage } from "@/lib/llm-tracking";
 import { logger } from "@/lib/logger";
+import { extractWithOllama, isOllamaEnabled } from "@/lib/ollama-resume-llm";
 
 const PROMPT_VERSION = "candidate-profile-v1";
 const DEFAULT_MODEL = process.env.OPENAI_RESUME_MODEL ?? "gpt-4o-mini";
@@ -272,11 +273,30 @@ export async function extractCandidateProfile(
   orgId?: string,
   options?: { timeoutMs?: number }
 ): Promise<LlmResult> {
+  const startTime = Date.now();
+
+  // Try fine-tuned Ollama model first (free, local)
+  if (isOllamaEnabled()) {
+    try {
+      const ollamaExtract = await extractWithOllama(resumeText);
+      if (ollamaExtract) {
+        logger.info("Resume parsed via Ollama (apex-resume-qwen-3b)");
+        return {
+          extract: ollamaExtract,
+          model: process.env.OLLAMA_RESUME_MODEL ?? "apex-resume-qwen-3b:latest",
+          promptVersion: PROMPT_VERSION,
+          warnings: [],
+          usage: undefined,
+        };
+      }
+    } catch (ollamaErr) {
+      logger.warn("Ollama extraction failed, falling back to OpenAI", { error: ollamaErr });
+    }
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     throw new LLMError("OPENAI_API_KEY not configured", "openai", DEFAULT_MODEL);
   }
-
-  const startTime = Date.now();
 
   try {
     const timeoutMs =

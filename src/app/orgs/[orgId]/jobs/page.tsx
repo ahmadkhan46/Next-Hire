@@ -118,7 +118,7 @@ export default async function JobsPage({
                       href={`/orgs/${orgId}/jobs/${j.id}/skills`}
                       className="inline-flex w-full items-center justify-center gap-1 rounded-full border bg-background/40 px-3 py-1 text-sm transition hover:bg-accent/60 sm:w-auto"
                     >
-                      Edit <ArrowUpRight className="h-4 w-4" />
+                      View <ArrowUpRight className="h-4 w-4" />
                     </Link>
                     <Link
                       href={`/orgs/${orgId}/matchboard?jobId=${j.id}`}

@@ -452,6 +452,18 @@
   color: #e2e8f0;
 }
 
+/* Clerk layout centering — prevent internal left-drift */
+.tech-auth .cl-rootBox,
+.tech-auth .cl-card,
+.tech-auth .cl-cardBox,
+.tech-auth .cl-main,
+.tech-auth .cl-form {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* Clerk social button overrides (ensure visibility) */
 .tech-auth .cl-socialButtonsBlockButton {
   background: #ffffff;

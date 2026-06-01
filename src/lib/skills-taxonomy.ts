@@ -46,12 +46,19 @@ export const SKILLS_TAXONOMY = {
   ],
   
   'Data & AI': [
-    'Machine Learning', 'Deep Learning', 'AI', 'Artificial Intelligence', 'TensorFlow',
+    'Machine Learning', 'Deep Learning', 'Artificial Intelligence', 'TensorFlow',
     'PyTorch', 'Keras', 'Scikit-learn', 'Pandas', 'NumPy', 'Jupyter', 'Data Science',
     'Data Analysis', 'Data Visualization', 'NLP', 'Natural Language Processing',
     'Computer Vision', 'OpenCV', 'YOLO', 'Transformers', 'BERT', 'GPT', 'LLM',
     'Statistical Analysis', 'A/B Testing', 'Tableau', 'Power BI', 'Looker', 'Matplotlib',
-    'Seaborn', 'Plotly', 'Apache Spark', 'Hadoop', 'ETL', 'Data Warehousing', 'Big Data'
+    'Seaborn', 'Plotly', 'Apache Spark', 'Hadoop', 'ETL', 'Data Warehousing', 'Big Data',
+    'Foundation Models', 'LLM APIs', 'Prompt Engineering', 'RAG', 'Fine-tuning',
+    'OpenAI API', 'Claude API', 'Gemini', 'Gemini API', 'Llama', 'Mistral',
+    'Azure AI', 'Microsoft Foundry', 'Azure OpenAI', 'Amazon Bedrock', 'Google Vertex AI',
+    'Model Deployment', 'Managed Endpoints', 'AI APIs', 'Embedding Models',
+    'Vector Databases', 'Pinecone', 'Weaviate', 'Chroma', 'pgvector',
+    'LangChain', 'LlamaIndex', 'Semantic Kernel', 'Hugging Face',
+    'RLHF', 'DPO', 'Inference', 'Batch Inference', 'Model Evaluation'
   ],
   
   'Testing & QA': [
@@ -105,8 +112,10 @@ export const SKILLS_TAXONOMY = {
   'Security': [
     'Cybersecurity', 'Information Security', 'Network Security', 'Application Security',
     'Penetration Testing', 'Ethical Hacking', 'OWASP', 'Security Auditing', 'Compliance',
-    'GDPR', 'HIPAA', 'SOC 2', 'ISO 27001', 'Encryption', 'Authentication', 'Authorization',
-    'OAuth', 'JWT', 'SSL/TLS', 'Firewall', 'VPN', 'SIEM', 'Incident Response', 'Vulnerability Assessment'
+    'GDPR', 'HIPAA', 'SOC 2', 'ISO 27001', 'Encryption', 'Authorization',
+    'OAuth', 'JWT', 'SSL/TLS', 'Firewall', 'VPN', 'SIEM', 'Incident Response', 'Vulnerability Assessment',
+    'IAM', 'Identity and Access Management', 'Service Account', 'RBAC', 'Zero Trust',
+    'API Security', 'Secret Management', 'Key Management'
   ],
   
   'Networking': [

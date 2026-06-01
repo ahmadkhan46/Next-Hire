@@ -1,32 +1,38 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { isClerkClientEnabled } from "@/lib/clerk-config";
 
 export default function SignUpPage() {
   const clerkEnabled = isClerkClientEnabled();
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center">
       <div className="tech-bg" />
       <div className="tech-grid" />
 
       <div className="absolute left-[-20px] top-20 tech-orb tech-orb-sm" />
       <div className="absolute right-[-80px] bottom-16 tech-orb" />
 
-      <div className="relative z-10 w-full max-w-lg px-4 sm:px-6">
-        <div className="tech-card rounded-2xl sm:rounded-[36px] p-5 sm:p-10 text-center overflow-hidden">
-          <div className="mx-auto mb-4 sm:mb-6 h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-white/10 grid place-items-center">
-            <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500" />
+      <div className="relative z-10 w-full max-w-md px-4 sm:px-6">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400/20 border border-cyan-400/30">
+            <Sparkles className="h-4 w-4 text-cyan-400" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tech-title mb-2">Get Started</h1>
-          <p className="tech-muted text-sm sm:text-base mb-6 sm:mb-10">
-            Create your account to unlock the recruitment intelligence platform.
-          </p>
+          <span className="text-xl font-black text-white tracking-tight">NextHire</span>
+        </div>
 
-          <div className="rounded-2xl tech-auth">
+        <div className="tech-card rounded-2xl sm:rounded-3xl p-6 sm:p-8 overflow-hidden">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl sm:text-3xl font-black tech-title mb-1.5">Create account</h1>
+            <p className="tech-muted text-sm">Start hiring smarter today</p>
+          </div>
+
+          <div className="rounded-xl tech-auth">
             {clerkEnabled ? (
               <SignUp
-                fallbackRedirectUrl="/"
+                fallbackRedirectUrl="/orgs/demo"
                 appearance={{
                   variables: {
                     colorPrimary: "#38bdf8",
@@ -35,15 +41,17 @@ export default function SignUpPage() {
                     colorBackground: "transparent",
                     colorInputBackground: "rgba(15, 23, 42, 0.6)",
                     colorInputText: "#e2e8f0",
-                    borderRadius: "14px",
+                    borderRadius: "12px",
                   },
                   elements: {
                     rootBox: "mx-auto w-full",
-                    card: "shadow-none bg-transparent border-0 p-0",
+                    card: "shadow-none bg-transparent border-0 p-0 w-full",
+                    cardBox: "w-full shadow-none",
+                    main: "w-full",
                     header: "hidden",
                     headerTitle: "hidden",
                     headerSubtitle: "hidden",
-                    formButtonPrimary: "tech-accent rounded-xl h-11 text-sm font-semibold",
+                    formButtonPrimary: "tech-accent rounded-xl h-11 text-sm font-semibold w-full",
                     formFieldInput:
                       "bg-slate-900/70 border-slate-700 text-slate-100 focus:ring-2 focus:ring-cyan-400/30 h-11",
                     formFieldLabel: "text-slate-300 text-xs uppercase tracking-wider",
@@ -58,7 +66,8 @@ export default function SignUpPage() {
                     form: "gap-5",
                     formFieldRow: "gap-3",
                     footerAction: "hidden",
-                    footerActionLink__signUp: "text-cyan-300",
+                    footerAction__signUp: "hidden",
+                    footerMainContent: "hidden",
                     identityPreviewText: "text-slate-400 text-xs",
                     identityPreviewEditButton: "text-cyan-300",
                     badge: "hidden",
@@ -66,7 +75,6 @@ export default function SignUpPage() {
                     badge__lastUsedContainer: "hidden",
                     socialButtonsBlockButtonBadge: "hidden",
                     socialButtonsBlockButton__lastUsed: "hidden",
-                    footerMainContent: "hidden",
                   },
                 }}
               />
@@ -77,14 +85,23 @@ export default function SignUpPage() {
             )}
           </div>
 
-          <div className="mt-6">
-            <Link
-              href="/orgs/demo"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm font-semibold text-slate-100 hover:bg-slate-800"
-            >
-              Continue as Guest
+          {/* Sign-in link */}
+          <p className="mt-5 text-center text-sm text-slate-400">
+            Already have an account?{" "}
+            <Link href="/sign-in" className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
+              Sign in
             </Link>
-          </div>
+          </p>
+        </div>
+
+        {/* Guest access */}
+        <div className="mt-4">
+          <Link
+            href="/orgs/demo"
+            className="flex w-full items-center justify-center rounded-xl border border-slate-700/60 bg-slate-900/40 px-4 py-3 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all"
+          >
+            Continue as guest
+          </Link>
         </div>
       </div>
     </div>

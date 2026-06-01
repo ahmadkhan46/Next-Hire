@@ -32,30 +32,32 @@ export async function GET() {
       select: { orgId: true },
     });
 
-    // Fallback for deployments where Clerk user IDs changed but email stayed the same.
+    // Resolve email (needed for fallback lookup and auto-bootstrap)
+    let resolvedEmail: string | null = null;
     if (!membership) {
       const claims = authResult.sessionClaims as Record<string, unknown> | null | undefined;
-      let email =
+      resolvedEmail =
         (claims?.email as string | undefined) ||
         (claims?.primary_email as string | undefined) ||
         (claims?.primaryEmail as string | undefined) ||
         null;
 
-      if (!email) {
+      if (!resolvedEmail) {
         try {
           const client = await clerkClient();
           const user = await client.users.getUser(userId);
-          email =
+          resolvedEmail =
             user.emailAddresses?.find((e) => e.id === user.primaryEmailAddressId)
               ?.emailAddress ?? user.emailAddresses?.[0]?.emailAddress ?? null;
         } catch {
-          email = null;
+          resolvedEmail = null;
         }
       }
 
-      if (email) {
+      // Fallback: look up by email (Clerk user ID may have changed)
+      if (resolvedEmail) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: email.toLowerCase() },
+          where: { email: resolvedEmail.toLowerCase() },
           select: { id: true },
         });
 
@@ -70,7 +72,39 @@ export async function GET() {
     }
 
     if (!membership) {
-      return NextResponse.json({ error: "No organization" }, { status: 404 });
+      // Auto-bootstrap: first sign-in — create user + org + membership
+      if (!resolvedEmail) {
+        return NextResponse.json({ error: "No organization" }, { status: 404 });
+      }
+
+      const email = resolvedEmail;
+      const result = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.upsert({
+          where: { email: email.toLowerCase() },
+          update: { id: userId },
+          create: { id: userId, email: email.toLowerCase(), name: email.split("@")[0] },
+          select: { id: true },
+        });
+
+        let org = await tx.organization.findFirst({
+          where: { memberships: { some: { userId: user.id } } },
+          select: { id: true },
+        });
+
+        if (!org) {
+          org = await tx.organization.create({
+            data: { name: `${email.split("@")[0]}'s Workspace` },
+            select: { id: true },
+          });
+          await tx.membership.create({
+            data: { userId: user.id, orgId: org.id, role: "OWNER" },
+          });
+        }
+
+        return { orgId: org.id };
+      });
+
+      return NextResponse.json({ orgId: result.orgId });
     }
 
     return NextResponse.json({ orgId: membership.orgId });

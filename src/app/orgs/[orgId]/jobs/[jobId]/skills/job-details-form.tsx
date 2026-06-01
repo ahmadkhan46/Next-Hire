@@ -162,9 +162,9 @@ export function JobDetailsForm({
   }, [location, locationFocused]);
 
   const readOnlyClass =
-    "mt-2 min-h-[40px] cursor-default rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-foreground leading-relaxed select-none";
+    "mt-2 min-h-[40px] cursor-text rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-foreground leading-relaxed select-text";
   const mutedReadOnlyClass =
-    "mt-2 min-h-[40px] cursor-default rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground italic leading-relaxed select-none";
+    "mt-2 min-h-[40px] cursor-text rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground italic leading-relaxed select-text";
 
   return (
     <Card className="premium-block rounded-3xl border bg-card/50 p-6 shadow-sm">
@@ -220,7 +220,7 @@ export function JobDetailsForm({
               placeholder="Describe the role, responsibilities, and tech stack..."
             />
           ) : (
-            <div className="mt-2 min-h-[64px] cursor-default rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed select-none">
+            <div className="mt-2 min-h-[64px] cursor-text rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed select-text">
               {description.trim() || (
                 <span className="italic opacity-50">No description yet. Click Edit to add one.</span>
               )}
