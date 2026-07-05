@@ -541,11 +541,8 @@ export async function extractCandidateProfilesBatch(
   ].join("\n");
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  // Allow 30 s per resume in the batch, minimum 30 s, capped at 120 s
-  const batchTimeoutMs = Math.min(120000, Math.max(30000, items.length * 30000));
-
   try {
-    const responsePromise = openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
       temperature: 0,
       messages: [
@@ -554,17 +551,6 @@ export async function extractCandidateProfilesBatch(
       ],
       response_format: { type: "json_object" },
     });
-
-    let batchTimeoutId: NodeJS.Timeout | null = null;
-    const batchTimeoutPromise = new Promise<never>((_, reject) => {
-      batchTimeoutId = setTimeout(
-        () => reject(new Error(`Batch LLM timeout after ${batchTimeoutMs / 1000}s`)),
-        batchTimeoutMs,
-      );
-    });
-
-    const response = await Promise.race([responsePromise, batchTimeoutPromise]);
-    if (batchTimeoutId) clearTimeout(batchTimeoutId);
 
     const outputText = response.choices[0]?.message?.content ?? "";
     const usage = response.usage;
