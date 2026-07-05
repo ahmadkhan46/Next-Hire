@@ -30,6 +30,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "prisma.config.ts.bak", "src/app/orgs/[orgId]/page.tsx"  ],
+  ],
   "exclude": ["node_modules", "ai-project-code-only-2026-03-15", "ai-project-upload-bundle"]
 }

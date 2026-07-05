@@ -22,11 +22,6 @@ const ALLOWED_MIME = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
-const UPLOAD_BATCH_SIZE = Math.max(
-  1,
-  Math.min(10, Number(process.env.RESUME_UPLOAD_BATCH_SIZE ?? 10) || 10),
-);
-
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function isAllowedFile(file: File): boolean {
