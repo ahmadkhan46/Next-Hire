@@ -51,3 +51,12 @@ next-env.d.ts
 # local project export / archive files/folders
 /ai-project-*
 /documents/
+
+# runtime logs
+/logs/
+
+# test artifacts
+/playwright-report/
+
+# backup files
+*.bak
