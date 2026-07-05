@@ -1,24 +1,33 @@
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Users } from "lucide-react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CandidatesActions } from "./candidates-actions";
 import { CandidateSearch } from "./candidate-search";
+import { CandidatesFilters } from "./candidates-filters";
 import { CandidatesList } from "./candidates-list";
 import type { Prisma } from "@prisma/client";
+
+const VALID_STATUSES = ["ACTIVE", "INACTIVE", "HIRED", "REJECTED", "NEEDS_REVIEW"] as const;
+const VALID_SOURCES = ["MANUAL", "IMPORT", "REFERRAL", "LINKEDIN", "AGENCY", "CAREER_SITE", "JOB_BOARD"] as const;
+const VALID_SORTS = ["newest", "oldest", "name_asc", "name_desc"] as const;
+
+type Sort = (typeof VALID_SORTS)[number];
 
 export default async function CandidatesPage({
   params,
   searchParams,
 }: {
   params: Promise<{ orgId: string }>;
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; source?: string; sort?: string }>;
 }) {
   const { orgId } = await params;
-  const qp = await searchParams;
-  const q = (qp.q ?? "").trim();
+  const sp = await searchParams;
+  const q = (sp.q ?? "").trim();
+  const statusFilter = VALID_STATUSES.includes(sp.status as any) ? sp.status! : "";
+  const sourceFilter = VALID_SOURCES.includes(sp.source as any) ? sp.source! : "";
+  const sort: Sort = VALID_SORTS.includes(sp.sort as any) ? (sp.sort as Sort) : "newest";
 
   const org = await prisma.organization.findUnique({
     where: { id: orgId },
@@ -28,6 +37,8 @@ export default async function CandidatesPage({
   if (!org) redirect("/orgs/demo");
 
   const where: Prisma.CandidateWhereInput = { orgId };
+  if (statusFilter) where.status = statusFilter;
+  if (sourceFilter) where.source = sourceFilter;
   if (q) {
     where.OR = [
       { fullName: { contains: q, mode: "insensitive" } },
@@ -35,14 +46,21 @@ export default async function CandidatesPage({
     ];
   }
 
+  const orderBy: Prisma.CandidateOrderByWithRelationInput =
+    sort === "oldest"
+      ? { createdAt: "asc" }
+      : sort === "name_asc"
+      ? { fullName: "asc" }
+      : sort === "name_desc"
+      ? { fullName: "desc" }
+      : { createdAt: "desc" };
+
   const [totalCandidates, candidates] = await Promise.all([
     prisma.candidate.count({ where: { orgId } }),
-    prisma.candidate.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    }),
+    prisma.candidate.findMany({ where, orderBy, take: 200 }),
   ]);
+
+  const isFiltered = q || statusFilter || sourceFilter || sort !== "newest";
 
   return (
     <div className="space-y-8">
@@ -52,9 +70,7 @@ export default async function CandidatesPage({
             <Users className="h-3.5 w-3.5" />
             Candidates
           </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-            Talent Pool
-          </h1>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Talent Pool</h1>
           <p className="mt-2 text-muted-foreground">
             Your organization&apos;s candidates with skills extracted and tracked.
           </p>
@@ -64,35 +80,37 @@ export default async function CandidatesPage({
       </div>
 
       <Card className="premium-block rounded-3xl border bg-card/50 p-6 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm text-muted-foreground">Total</div>
             <div className="mt-1 text-lg font-semibold">
-              {candidates.length} candidates
+              {totalCandidates} candidate{totalCandidates !== 1 ? "s" : ""}
+              {isFiltered && candidates.length !== totalCandidates ? (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  ({candidates.length} shown)
+                </span>
+              ) : null}
             </div>
           </div>
-          <Badge variant="secondary" className="rounded-full">
-            Live
-          </Badge>
         </div>
 
         <Separator className="my-4" />
 
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3">
           <CandidateSearch initialQuery={q} />
-          {q ? (
-            <div className="text-sm text-muted-foreground">
-              {candidates.length} of {totalCandidates}
-            </div>
-          ) : null}
+          <CandidatesFilters
+            initialStatus={statusFilter}
+            initialSource={sourceFilter}
+            initialSort={sort}
+          />
         </div>
 
         <CandidatesList
           orgId={orgId}
           candidates={candidates}
           emptyMessage={
-            q
-              ? "No candidates found for this search."
+            isFiltered
+              ? "No candidates match your filters."
               : "No candidates yet. Use import to add multiple candidates with resumes."
           }
         />

@@ -10,15 +10,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "INR", "AED", "SGD"];
+
 type JobDetailsShape = {
   id: string;
   title: string;
+  company: string | null;
+  department: string | null;
   description: string | null;
   location: string | null;
   status: "OPEN" | "CLOSED";
   workMode: "REMOTE" | "ONSITE" | "HYBRID" | "OTHER" | null;
   workModeOther: string | null;
   requiredYearsOfExperience: number | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
+  closingDate: Date | null;
+  openingsCount: number | null;
 };
 
 const WORK_MODE_LABELS: Record<string, string> = {
@@ -28,18 +37,14 @@ const WORK_MODE_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
-export function JobDetailsForm({
-  orgId,
-  job,
-}: {
-  orgId: string;
-  job: JobDetailsShape;
-}) {
+export function JobDetailsForm({ orgId, job }: { orgId: string; job: JobDetailsShape }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
 
   const [title, setTitle] = useState(job.title ?? "");
+  const [company, setCompany] = useState(job.company ?? "");
+  const [department, setDepartment] = useState(job.department ?? "");
   const [description, setDescription] = useState(job.description ?? "");
   const [location, setLocation] = useState(job.location ?? "");
   const [status, setStatus] = useState<"OPEN" | "CLOSED">(job.status ?? "OPEN");
@@ -48,52 +53,75 @@ export function JobDetailsForm({
   const [requiredYears, setRequiredYears] = useState(
     job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "0"
   );
+  const [salaryMin, setSalaryMin] = useState(job.salaryMin != null ? String(job.salaryMin) : "");
+  const [salaryMax, setSalaryMax] = useState(job.salaryMax != null ? String(job.salaryMax) : "");
+  const [salaryCurrency, setSalaryCurrency] = useState(job.salaryCurrency ?? "USD");
+  const [closingDate, setClosingDate] = useState(
+    job.closingDate ? new Date(job.closingDate).toISOString().slice(0, 10) : ""
+  );
+  const [openingsCount, setOpeningsCount] = useState(
+    job.openingsCount != null ? String(job.openingsCount) : ""
+  );
   const [locationSuggestions, setLocationSuggestions] = useState<
     Array<{ label: string; value: string; type: "city" | "country" }>
   >([]);
   const [loadingLocationSuggestions, setLoadingLocationSuggestions] = useState(false);
   const [locationFocused, setLocationFocused] = useState(false);
 
-  const originalSnapshot = JSON.stringify({
-    title: (job.title ?? "").trim(),
-    description: (job.description ?? "").trim(),
-    location: (job.location ?? "").trim(),
-    status: job.status ?? "OPEN",
-    workMode: job.workMode ?? "",
-    workModeOther: (job.workModeOther ?? "").trim(),
-    requiredYears: job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "0",
+  const makeSnapshot = (
+    t: string, c: string, dep: string, desc: string, loc: string,
+    st: string, wm: string, wmo: string, ry: string,
+    sMin: string, sMax: string, sCur: string, cd: string, oc: string
+  ) => JSON.stringify({
+    title: t.trim(), company: c.trim(), department: dep.trim(),
+    description: desc.trim(), location: loc.trim(), status: st,
+    workMode: wm || "", workModeOther: wm === "OTHER" ? wmo.trim() : "",
+    requiredYears: ry.trim(), salaryMin: sMin.trim(), salaryMax: sMax.trim(),
+    salaryCurrency: sCur, closingDate: cd, openingsCount: oc.trim(),
   });
 
-  const currentSnapshot = JSON.stringify({
-    title: title.trim(),
-    description: description.trim(),
-    location: location.trim(),
-    status,
-    workMode: workMode || "",
-    workModeOther: workMode === "OTHER" ? workModeOther.trim() : "",
-    requiredYears: requiredYears.trim(),
-  });
+  const originalSnapshot = makeSnapshot(
+    job.title, job.company ?? "", job.department ?? "",
+    job.description ?? "", job.location ?? "", job.status ?? "OPEN",
+    job.workMode ?? "", job.workModeOther ?? "",
+    job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "0",
+    job.salaryMin != null ? String(job.salaryMin) : "",
+    job.salaryMax != null ? String(job.salaryMax) : "",
+    job.salaryCurrency ?? "USD",
+    job.closingDate ? new Date(job.closingDate).toISOString().slice(0, 10) : "",
+    job.openingsCount != null ? String(job.openingsCount) : "",
+  );
+
+  const currentSnapshot = makeSnapshot(
+    title, company, department, description, location, status,
+    workMode, workModeOther, requiredYears,
+    salaryMin, salaryMax, salaryCurrency, closingDate, openingsCount,
+  );
 
   const dirty = currentSnapshot !== originalSnapshot;
 
   function handleCancel() {
     setTitle(job.title ?? "");
+    setCompany(job.company ?? "");
+    setDepartment(job.department ?? "");
     setDescription(job.description ?? "");
     setLocation(job.location ?? "");
     setStatus(job.status ?? "OPEN");
     setWorkMode(job.workMode ?? "");
     setWorkModeOther(job.workModeOther ?? "");
     setRequiredYears(job.requiredYearsOfExperience != null ? String(job.requiredYearsOfExperience) : "0");
+    setSalaryMin(job.salaryMin != null ? String(job.salaryMin) : "");
+    setSalaryMax(job.salaryMax != null ? String(job.salaryMax) : "");
+    setSalaryCurrency(job.salaryCurrency ?? "USD");
+    setClosingDate(job.closingDate ? new Date(job.closingDate).toISOString().slice(0, 10) : "");
+    setOpeningsCount(job.openingsCount != null ? String(job.openingsCount) : "");
     setLocationSuggestions([]);
     setEditing(false);
   }
 
   async function onSave() {
     const t = title.trim();
-    if (!t) {
-      toast.error("Title is required");
-      return;
-    }
+    if (!t) { toast.error("Title is required"); return; }
 
     const yearsNum = Number(requiredYears.trim());
     if (!requiredYears.trim() || !Number.isFinite(yearsNum) || yearsNum < 0) {
@@ -108,12 +136,19 @@ export function JobDetailsForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: t,
+          company: company.trim() || null,
+          department: department.trim() || null,
           description: description.trim() || null,
           location: location.trim() || null,
           status,
           workMode: workMode || null,
           workModeOther: workMode === "OTHER" ? workModeOther.trim() || null : null,
           requiredYearsOfExperience: yearsNum,
+          salaryMin: salaryMin.trim() ? Number(salaryMin) : null,
+          salaryMax: salaryMax.trim() ? Number(salaryMax) : null,
+          salaryCurrency: (salaryMin.trim() || salaryMax.trim()) ? salaryCurrency : null,
+          closingDate: closingDate || null,
+          openingsCount: openingsCount.trim() ? Number(openingsCount) : null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -155,20 +190,14 @@ export function JobDetailsForm({
       }
     }, 180);
 
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [location, locationFocused]);
 
-  const readOnlyClass =
-    "mt-2 min-h-[40px] cursor-text rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-foreground leading-relaxed select-text";
-  const mutedReadOnlyClass =
-    "mt-2 min-h-[40px] cursor-text rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground italic leading-relaxed select-text";
+  const ro = "mt-2 min-h-[40px] cursor-text rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-foreground leading-relaxed select-text";
+  const rom = "mt-2 min-h-[40px] cursor-text rounded-2xl border bg-background/40 px-3 py-2.5 text-sm text-muted-foreground italic leading-relaxed select-text";
 
   return (
     <Card className="premium-block rounded-3xl border bg-card/50 p-6 shadow-sm">
-      {/* Edit / Cancel header button */}
       <div className="mb-4 flex justify-end">
         {editing ? (
           <button
@@ -196,16 +225,29 @@ export function JobDetailsForm({
         <div className="md:col-span-2">
           <div className="text-sm text-muted-foreground">Title</div>
           {editing ? (
-            <Input
-              className="mt-2 rounded-2xl"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Frontend Engineer"
-            />
+            <Input className="mt-2 rounded-2xl" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Frontend Engineer" />
           ) : (
-            <div className={title.trim() ? readOnlyClass : mutedReadOnlyClass}>
-              {title.trim() || "No title"}
-            </div>
+            <div className={title.trim() ? ro : rom}>{title.trim() || "No title"}</div>
+          )}
+        </div>
+
+        {/* Company */}
+        <div>
+          <div className="text-sm text-muted-foreground">Company</div>
+          {editing ? (
+            <Input className="mt-2 rounded-2xl" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Corp" />
+          ) : (
+            <div className={company.trim() ? ro : rom}>{company.trim() || "Not specified"}</div>
+          )}
+        </div>
+
+        {/* Department */}
+        <div>
+          <div className="text-sm text-muted-foreground">Department</div>
+          {editing ? (
+            <Input className="mt-2 rounded-2xl" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Engineering" />
+          ) : (
+            <div className={department.trim() ? ro : rom}>{department.trim() || "Not specified"}</div>
           )}
         </div>
 
@@ -242,9 +284,7 @@ export function JobDetailsForm({
                 placeholder="Ireland / Remote"
               />
               {loadingLocationSuggestions ? (
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Loading location suggestions...
-                </div>
+                <div className="mt-1 text-xs text-muted-foreground">Loading location suggestions...</div>
               ) : null}
               {locationSuggestions.length > 0 ? (
                 <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto inner-scroll rounded-xl border bg-background p-1 shadow-sm">
@@ -253,10 +293,7 @@ export function JobDetailsForm({
                       key={`${item.type}-${item.value}`}
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        setLocation(item.value);
-                        setLocationSuggestions([]);
-                      }}
+                      onClick={() => { setLocation(item.value); setLocationSuggestions([]); }}
                       className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent"
                     >
                       <span>{item.label}</span>
@@ -267,9 +304,7 @@ export function JobDetailsForm({
               ) : null}
             </div>
           ) : (
-            <div className={location.trim() ? readOnlyClass : mutedReadOnlyClass}>
-              {location.trim() || "Not specified"}
-            </div>
+            <div className={location.trim() ? ro : rom}>{location.trim() || "Not specified"}</div>
           )}
         </div>
 
@@ -286,7 +321,7 @@ export function JobDetailsForm({
               <option value="CLOSED">CLOSED</option>
             </select>
           ) : (
-            <div className={readOnlyClass}>{status}</div>
+            <div className={ro}>{status}</div>
           )}
         </div>
 
@@ -300,11 +335,8 @@ export function JobDetailsForm({
                 value={workMode}
                 onChange={(e) =>
                   setWorkMode(
-                    e.target.value === "REMOTE" ||
-                      e.target.value === "ONSITE" ||
-                      e.target.value === "HYBRID" ||
-                      e.target.value === "OTHER"
-                      ? e.target.value
+                    ["REMOTE", "ONSITE", "HYBRID", "OTHER"].includes(e.target.value)
+                      ? (e.target.value as any)
                       : ""
                   )
                 }
@@ -325,7 +357,7 @@ export function JobDetailsForm({
               ) : null}
             </>
           ) : (
-            <div className={workMode ? readOnlyClass : mutedReadOnlyClass}>
+            <div className={workMode ? ro : rom}>
               {workMode
                 ? workMode === "OTHER"
                   ? workModeOther.trim() || "Other"
@@ -335,7 +367,7 @@ export function JobDetailsForm({
           )}
         </div>
 
-        {/* Min. years of experience */}
+        {/* Min years */}
         <div>
           <div className="text-sm text-muted-foreground">
             Min. years of experience <span className="text-destructive">*</span>
@@ -343,24 +375,89 @@ export function JobDetailsForm({
           {editing ? (
             <>
               <Input
-                type="number"
-                min={0}
-                max={50}
+                type="number" min={0} max={50}
                 className="mt-2 rounded-2xl"
                 value={requiredYears}
                 onChange={(e) => setRequiredYears(e.target.value)}
                 placeholder="0"
               />
               <div className="mt-1 text-xs text-muted-foreground">
-                Required. Use 0 for no minimum. Candidates below this are disqualified.
-                Scoring: 60% experience + 30% skills + 10% projects.
+                Use 0 for no minimum. Scoring: 60% experience + 30% skills + 10% projects.
               </div>
             </>
           ) : (
-            <div className={readOnlyClass}>
+            <div className={ro}>
               {requiredYears === "0" || requiredYears === ""
                 ? "No minimum"
                 : `${requiredYears} year${Number(requiredYears) === 1 ? "" : "s"}`}
+            </div>
+          )}
+        </div>
+
+        {/* Openings */}
+        <div>
+          <div className="text-sm text-muted-foreground">Number of openings</div>
+          {editing ? (
+            <Input
+              type="number" min={1}
+              className="mt-2 rounded-2xl"
+              value={openingsCount}
+              onChange={(e) => setOpeningsCount(e.target.value)}
+              placeholder="1"
+            />
+          ) : (
+            <div className={openingsCount.trim() ? ro : rom}>
+              {openingsCount.trim() ? `${openingsCount} position${Number(openingsCount) !== 1 ? "s" : ""}` : "Not specified"}
+            </div>
+          )}
+        </div>
+
+        {/* Salary */}
+        <div className="md:col-span-2">
+          <div className="text-sm text-muted-foreground">Salary range</div>
+          {editing ? (
+            <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_100px]">
+              <Input
+                type="number" min={0} className="rounded-2xl"
+                value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)}
+                placeholder="Min e.g. 60000"
+              />
+              <Input
+                type="number" min={0} className="rounded-2xl"
+                value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)}
+                placeholder="Max e.g. 90000"
+              />
+              <select
+                className="h-10 rounded-2xl border bg-background px-3 text-sm"
+                value={salaryCurrency}
+                onChange={(e) => setSalaryCurrency(e.target.value)}
+              >
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          ) : (
+            <div className={(salaryMin || salaryMax) ? ro : rom}>
+              {salaryMin || salaryMax
+                ? [salaryMin ? Number(salaryMin).toLocaleString() : null, salaryMax ? Number(salaryMax).toLocaleString() : null]
+                    .filter(Boolean).join(" – ") + ` ${salaryCurrency}`.trim()
+                : "Not specified"}
+            </div>
+          )}
+        </div>
+
+        {/* Closing date */}
+        <div>
+          <div className="text-sm text-muted-foreground">Application closing date</div>
+          {editing ? (
+            <Input
+              type="date" className="mt-2 rounded-2xl"
+              value={closingDate} onChange={(e) => setClosingDate(e.target.value)}
+            />
+          ) : (
+            <div className={closingDate ? ro : rom}>
+              {closingDate
+                ? new Date(closingDate).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
+                : "Not specified"}
             </div>
           )}
         </div>

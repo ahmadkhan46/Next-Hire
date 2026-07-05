@@ -17,6 +17,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "INR", "AED", "SGD"];
+
 export function CreateJob({ orgId }: { orgId: string }) {
   const router = useRouter();
 
@@ -24,10 +26,19 @@ export function CreateJob({ orgId }: { orgId: string }) {
   const [loading, setLoading] = useState(false);
 
   const [title, setTitle] = useState("");
+  const [company, setCompany] = useState("");
+  const [department, setDepartment] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [status, setStatus] = useState<"OPEN" | "CLOSED">("OPEN");
   const [workMode, setWorkMode] = useState<"REMOTE" | "ONSITE" | "HYBRID" | "OTHER" | "">("");
   const [workModeOther, setWorkModeOther] = useState("");
+  const [requiredYears, setRequiredYears] = useState("0");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
+  const [salaryCurrency, setSalaryCurrency] = useState("USD");
+  const [closingDate, setClosingDate] = useState("");
+  const [openingsCount, setOpeningsCount] = useState("");
   const [skills, setSkills] = useState<Array<{ name: string; weight: number }>>([]);
   const [skillInput, setSkillInput] = useState("");
   const [skillWeight, setSkillWeight] = useState(3);
@@ -53,7 +64,6 @@ export function CreateJob({ orgId }: { orgId: string }) {
   function addSkill(name: string, weight: number) {
     const normalized = normalizeSkillName(name);
     if (!normalized) return;
-
     setSkills((prev) => {
       const key = normalized.toLowerCase();
       const idx = prev.findIndex((s) => s.name.toLowerCase() === key);
@@ -78,13 +88,21 @@ export function CreateJob({ orgId }: { orgId: string }) {
     setSuggestions([]);
   }
 
+  function resetForm() {
+    setTitle(""); setCompany(""); setDepartment(""); setDescription("");
+    setLocation(""); setStatus("OPEN"); setWorkMode(""); setWorkModeOther("");
+    setRequiredYears("0"); setSalaryMin(""); setSalaryMax(""); setSalaryCurrency("USD");
+    setClosingDate(""); setOpeningsCount(""); setSkills([]); setSkillInput("");
+    setSkillWeight(3); setSuggestions([]); setLocationSuggestions([]);
+  }
+
   async function onSubmit() {
     const t = title.trim();
-    const d = description.trim();
-    const l = location.trim();
+    if (!t) { toast.error("Title is required"); return; }
 
-    if (!t) {
-      toast.error("Title is required");
+    const yearsNum = Number(requiredYears.trim());
+    if (requiredYears.trim() && (!Number.isFinite(yearsNum) || yearsNum < 0)) {
+      toast.error("Min. years must be a non-negative number");
       return;
     }
 
@@ -95,35 +113,29 @@ export function CreateJob({ orgId }: { orgId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: t,
-          description: d || null,
-          location: l || null,
+          company: company.trim() || null,
+          department: department.trim() || null,
+          description: description.trim() || null,
+          location: location.trim() || null,
+          status,
           workMode: workMode || null,
           workModeOther: workMode === "OTHER" ? workModeOther.trim() || null : null,
+          requiredYearsOfExperience: requiredYears.trim() ? yearsNum : null,
+          salaryMin: salaryMin.trim() ? Number(salaryMin) : null,
+          salaryMax: salaryMax.trim() ? Number(salaryMax) : null,
+          salaryCurrency: (salaryMin.trim() || salaryMax.trim()) ? salaryCurrency : null,
+          closingDate: closingDate || null,
+          openingsCount: openingsCount.trim() ? Number(openingsCount) : null,
           skills,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data?.error || "Failed to create job");
-      }
+      if (!res.ok) throw new Error(data?.error || "Failed to create job");
 
       toast.success("Job created");
-
-      // reset UI
       setOpen(false);
-      setTitle("");
-      setDescription("");
-      setLocation("");
-      setWorkMode("");
-      setWorkModeOther("");
-      setSkills([]);
-      setSkillInput("");
-      setSkillWeight(3);
-      setSuggestions([]);
-      setLocationSuggestions([]);
-
+      resetForm();
       router.refresh();
     } catch (e: any) {
       toast.error(e?.message ?? "Something went wrong");
@@ -132,19 +144,9 @@ export function CreateJob({ orgId }: { orgId: string }) {
     }
   }
 
-  function onCancel() {
-    setOpen(false);
-  }
-
-  // Debounced suggestions
-  // Kept lightweight because this runs inside a dialog and we only fetch while typing.
   useEffect(() => {
     const q = skillInput.trim();
-    if (!open || q.length < 2) {
-      setSuggestions([]);
-      setLoadingSuggestions(false);
-      return;
-    }
+    if (!open || q.length < 2) { setSuggestions([]); setLoadingSuggestions(false); return; }
 
     const controller = new AbortController();
     const timer = setTimeout(async () => {
@@ -164,18 +166,13 @@ export function CreateJob({ orgId }: { orgId: string }) {
       }
     }, 180);
 
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [open, orgId, skillInput]);
 
   useEffect(() => {
     const q = location.trim();
     if (!open || !locationFocused || q.length < 2) {
-      setLocationSuggestions([]);
-      setLoadingLocationSuggestions(false);
-      return;
+      setLocationSuggestions([]); setLoadingLocationSuggestions(false); return;
     }
 
     const controller = new AbortController();
@@ -196,10 +193,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
       }
     }, 180);
 
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [open, location, locationFocused]);
 
   return (
@@ -211,104 +205,206 @@ export function CreateJob({ orgId }: { orgId: string }) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[560px] rounded-3xl">
+      <DialogContent className="sm:max-w-[600px] rounded-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create job</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div>
-            <div className="text-sm text-muted-foreground">Title</div>
-            <Input
-              className="mt-2 rounded-2xl"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Frontend Engineer"
-            />
+        <div className="space-y-4">
+          {/* Title + Status */}
+          <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
+            <div>
+              <div className="text-sm text-muted-foreground">
+                Title <span className="text-destructive">*</span>
+              </div>
+              <Input
+                className="mt-2 rounded-2xl"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Frontend Engineer"
+              />
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Status</div>
+              <select
+                className="mt-2 h-10 w-full rounded-2xl border bg-background px-3 text-sm"
+                value={status}
+                onChange={(e) => setStatus(e.target.value === "CLOSED" ? "CLOSED" : "OPEN")}
+              >
+                <option value="OPEN">OPEN</option>
+                <option value="CLOSED">CLOSED</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <div className="text-sm text-muted-foreground">
-              Description (optional)
+          {/* Company + Department */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <div className="text-sm text-muted-foreground">Company</div>
+              <Input
+                className="mt-2 rounded-2xl"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="Acme Corp"
+              />
             </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Department</div>
+              <Input
+                className="mt-2 rounded-2xl"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="Engineering"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <div className="text-sm text-muted-foreground">Description (optional)</div>
             <Textarea
               className="mt-2 min-h-[120px] rounded-2xl"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Next.js + TS + Tailwind..."
+              placeholder="Paste the full job description — AI will extract skills from it."
             />
           </div>
 
-          <div>
-            <div className="text-sm text-muted-foreground">Location (optional)</div>
-            <div className="relative mt-2">
-              <Input
-                className="rounded-2xl"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                onFocus={() => setLocationFocused(true)}
-                onBlur={() => setTimeout(() => setLocationFocused(false), 120)}
-                placeholder="Ireland / Remote"
-              />
-              {loadingLocationSuggestions ? (
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Loading location suggestions...
-                </div>
-              ) : null}
-              {locationSuggestions.length > 0 ? (
-                <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto inner-scroll rounded-xl border bg-background p-1 shadow-sm">
-                  {locationSuggestions.map((item) => (
-                    <button
-                      key={`${item.type}-${item.value}`}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        setLocation(item.value);
-                        setLocationSuggestions([]);
-                      }}
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent"
-                    >
-                      <span>{item.label}</span>
-                      <span className="text-[11px] text-muted-foreground capitalize">{item.type}</span>
-                    </button>
-                  ))}
-                </div>
+          {/* Location + Work mode */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <div className="text-sm text-muted-foreground">Location (optional)</div>
+              <div className="relative mt-2">
+                <Input
+                  className="rounded-2xl"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onFocus={() => setLocationFocused(true)}
+                  onBlur={() => setTimeout(() => setLocationFocused(false), 120)}
+                  placeholder="Ireland / Remote"
+                />
+                {loadingLocationSuggestions ? (
+                  <div className="mt-1 text-xs text-muted-foreground">Loading...</div>
+                ) : null}
+                {locationSuggestions.length > 0 ? (
+                  <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto inner-scroll rounded-xl border bg-background p-1 shadow-sm">
+                    {locationSuggestions.map((item) => (
+                      <button
+                        key={`${item.type}-${item.value}`}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => { setLocation(item.value); setLocationSuggestions([]); }}
+                        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent"
+                      >
+                        <span>{item.label}</span>
+                        <span className="text-[11px] text-muted-foreground capitalize">{item.type}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm text-muted-foreground">Work mode</div>
+              <select
+                className="mt-2 h-10 w-full rounded-2xl border bg-background px-3 text-sm"
+                value={workMode}
+                onChange={(e) =>
+                  setWorkMode(
+                    e.target.value === "REMOTE" || e.target.value === "ONSITE" ||
+                    e.target.value === "HYBRID" || e.target.value === "OTHER"
+                      ? e.target.value : ""
+                  )
+                }
+              >
+                <option value="">Not specified</option>
+                <option value="REMOTE">Remote</option>
+                <option value="ONSITE">Onsite</option>
+                <option value="HYBRID">Hybrid</option>
+                <option value="OTHER">Other</option>
+              </select>
+              {workMode === "OTHER" ? (
+                <Input
+                  className="mt-2 rounded-2xl"
+                  value={workModeOther}
+                  onChange={(e) => setWorkModeOther(e.target.value)}
+                  placeholder="Enter custom work mode"
+                />
               ) : null}
             </div>
           </div>
 
-          <div>
-            <div className="text-sm text-muted-foreground">Work mode</div>
-            <select
-              className="mt-2 h-10 w-full rounded-2xl border bg-background px-3 text-sm"
-              value={workMode}
-              onChange={(e) =>
-                setWorkMode(
-                  e.target.value === "REMOTE" ||
-                    e.target.value === "ONSITE" ||
-                    e.target.value === "HYBRID" ||
-                    e.target.value === "OTHER"
-                    ? e.target.value
-                    : ""
-                )
-              }
-            >
-              <option value="">Not specified</option>
-              <option value="REMOTE">Remote</option>
-              <option value="ONSITE">Onsite</option>
-              <option value="HYBRID">Hybrid</option>
-              <option value="OTHER">Other</option>
-            </select>
-            {workMode === "OTHER" ? (
+          {/* Min years + Openings */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <div className="text-sm text-muted-foreground">Min. years of experience</div>
               <Input
+                type="number"
+                min={0}
+                max={50}
                 className="mt-2 rounded-2xl"
-                value={workModeOther}
-                onChange={(e) => setWorkModeOther(e.target.value)}
-                placeholder="Enter custom work mode"
+                value={requiredYears}
+                onChange={(e) => setRequiredYears(e.target.value)}
+                placeholder="0"
               />
-            ) : null}
+              <div className="mt-1 text-xs text-muted-foreground">0 = no minimum</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Number of openings</div>
+              <Input
+                type="number"
+                min={1}
+                className="mt-2 rounded-2xl"
+                value={openingsCount}
+                onChange={(e) => setOpeningsCount(e.target.value)}
+                placeholder="1"
+              />
+            </div>
           </div>
 
+          {/* Salary */}
+          <div>
+            <div className="text-sm text-muted-foreground">Salary range (optional)</div>
+            <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_100px]">
+              <Input
+                type="number"
+                min={0}
+                className="rounded-2xl"
+                value={salaryMin}
+                onChange={(e) => setSalaryMin(e.target.value)}
+                placeholder="Min e.g. 60000"
+              />
+              <Input
+                type="number"
+                min={0}
+                className="rounded-2xl"
+                value={salaryMax}
+                onChange={(e) => setSalaryMax(e.target.value)}
+                placeholder="Max e.g. 90000"
+              />
+              <select
+                className="h-10 rounded-2xl border bg-background px-3 text-sm"
+                value={salaryCurrency}
+                onChange={(e) => setSalaryCurrency(e.target.value)}
+              >
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Closing date */}
+          <div>
+            <div className="text-sm text-muted-foreground">Application closing date (optional)</div>
+            <Input
+              type="date"
+              className="mt-2 rounded-2xl"
+              value={closingDate}
+              onChange={(e) => setClosingDate(e.target.value)}
+            />
+          </div>
+
+          {/* Skills */}
           <div>
             <div className="text-sm text-muted-foreground">Skills (optional)</div>
             <div className="mt-2 grid gap-2 md:grid-cols-[1fr_140px_auto]">
@@ -318,10 +414,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
                   onChange={(e) => setSkillInput(e.target.value)}
                   placeholder="Type a skill (e.g., React, PostgreSQL)"
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addSkillFromInput();
-                    }
+                    if (e.key === "Enter") { e.preventDefault(); addSkillFromInput(); }
                   }}
                 />
                 {loadingSuggestions ? (
@@ -333,11 +426,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
                       <button
                         key={`${item.name}-${item.source}`}
                         type="button"
-                        onClick={() => {
-                          addSkill(item.name, skillWeight);
-                          setSkillInput("");
-                          setSuggestions([]);
-                        }}
+                        onClick={() => { addSkill(item.name, skillWeight); setSkillInput(""); setSuggestions([]); }}
                         className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent"
                       >
                         <span>{item.name}</span>
@@ -385,7 +474,7 @@ export function CreateJob({ orgId }: { orgId: string }) {
               </div>
             ) : (
               <div className="mt-2 text-xs text-muted-foreground">
-                Optional. You can also add skills later from the Skills page.
+                Optional. Add skills after creation from the Skills page.
               </div>
             )}
           </div>
@@ -394,12 +483,11 @@ export function CreateJob({ orgId }: { orgId: string }) {
             <Button
               variant="ghost"
               className="rounded-2xl sm:min-w-24"
-              onClick={onCancel}
+              onClick={() => setOpen(false)}
               disabled={loading}
             >
               Cancel
             </Button>
-
             <Button
               className="rounded-2xl sm:min-w-24"
               onClick={onSubmit}
@@ -413,4 +501,3 @@ export function CreateJob({ orgId }: { orgId: string }) {
     </Dialog>
   );
 }
-

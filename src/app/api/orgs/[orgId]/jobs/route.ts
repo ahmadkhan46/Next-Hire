@@ -81,6 +81,8 @@ export const POST = createRoute<{ orgId: string }>(
     const body = await req.json().catch(() => ({}));
 
     const title = String(body?.title ?? "").trim();
+    const company = body?.company == null ? null : String(body.company).trim() || null;
+    const department = body?.department == null ? null : String(body.department).trim() || null;
     const description =
       body?.description === null || body?.description === undefined
         ? null
@@ -106,6 +108,15 @@ export const POST = createRoute<{ orgId: string }>(
         : String(body.workModeOther).trim();
     const workModeOther =
       workMode === "OTHER" ? workModeOtherRaw || "Other" : null;
+    const statusRaw = body?.status === "CLOSED" ? "CLOSED" : "OPEN";
+    const yearsRaw = body?.requiredYearsOfExperience;
+    const requiredYearsOfExperience =
+      yearsRaw == null || yearsRaw === "" ? null : Math.max(0, Math.trunc(Number(yearsRaw)));
+    const salaryMin = body?.salaryMin == null ? null : Math.max(0, Math.trunc(Number(body.salaryMin))) || null;
+    const salaryMax = body?.salaryMax == null ? null : Math.max(0, Math.trunc(Number(body.salaryMax))) || null;
+    const salaryCurrency = body?.salaryCurrency == null ? null : String(body.salaryCurrency).trim().toUpperCase() || null;
+    const closingDate = body?.closingDate == null ? null : (() => { const d = new Date(body.closingDate); return isNaN(d.getTime()) ? null : d; })();
+    const openingsCount = body?.openingsCount == null ? null : Math.max(1, Math.trunc(Number(body.openingsCount))) || null;
     const rawSkills = Array.isArray(body?.skills) ? body.skills : [];
 
     const dedupSkills = new Map<string, { name: string; weight: number }>();
@@ -148,20 +159,36 @@ export const POST = createRoute<{ orgId: string }>(
         data: {
           orgId,
           title,
+          company,
+          department,
           description,
           location,
-          status: "OPEN",
+          status: statusRaw,
           workMode,
           workModeOther,
+          requiredYearsOfExperience,
+          salaryMin,
+          salaryMax,
+          salaryCurrency,
+          closingDate,
+          openingsCount,
         },
         select: {
           id: true,
           title: true,
+          company: true,
+          department: true,
           description: true,
           location: true,
           status: true,
           workMode: true,
           workModeOther: true,
+          requiredYearsOfExperience: true,
+          salaryMin: true,
+          salaryMax: true,
+          salaryCurrency: true,
+          closingDate: true,
+          openingsCount: true,
           createdAt: true,
         },
       });

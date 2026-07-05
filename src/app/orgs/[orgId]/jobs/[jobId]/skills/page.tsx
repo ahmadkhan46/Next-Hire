@@ -23,12 +23,19 @@ export default async function JobSkillsPage({
     select: {
       id: true,
       title: true,
+      company: true,
+      department: true,
       description: true,
       location: true,
       status: true,
       workMode: true,
       workModeOther: true,
       requiredYearsOfExperience: true,
+      salaryMin: true,
+      salaryMax: true,
+      salaryCurrency: true,
+      closingDate: true,
+      openingsCount: true,
     },
   });
 
@@ -99,12 +106,19 @@ export default async function JobSkillsPage({
         job={{
           id: job.id,
           title: job.title,
+          company: job.company,
+          department: job.department,
           description: job.description,
           location: job.location,
           status: job.status,
           workMode: job.workMode,
           workModeOther: job.workModeOther,
           requiredYearsOfExperience: job.requiredYearsOfExperience,
+          salaryMin: job.salaryMin,
+          salaryMax: job.salaryMax,
+          salaryCurrency: job.salaryCurrency,
+          closingDate: job.closingDate,
+          openingsCount: job.openingsCount,
         }}
       />
 

@@ -19,6 +19,8 @@ export const PATCH = createRoute(
     const body = await req.json().catch(() => ({}));
 
     const title = String(body?.title ?? "").trim();
+    const company = body?.company == null ? null : String(body.company).trim() || null;
+    const department = body?.department == null ? null : String(body.department).trim() || null;
     const description =
       body?.description === null || body?.description === undefined
         ? null
@@ -57,6 +59,12 @@ export const PATCH = createRoute(
         ? null
         : Math.max(0, Math.trunc(Number(yearsRaw)));
 
+    const salaryMin = body?.salaryMin == null ? null : Math.max(0, Math.trunc(Number(body.salaryMin))) || null;
+    const salaryMax = body?.salaryMax == null ? null : Math.max(0, Math.trunc(Number(body.salaryMax))) || null;
+    const salaryCurrency = body?.salaryCurrency == null ? null : String(body.salaryCurrency).trim().toUpperCase() || null;
+    const closingDate = body?.closingDate == null ? null : (() => { const d = new Date(body.closingDate); return isNaN(d.getTime()) ? null : d; })();
+    const openingsCount = body?.openingsCount == null ? null : Math.max(1, Math.trunc(Number(body.openingsCount))) || null;
+
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
@@ -66,12 +74,19 @@ export const PATCH = createRoute(
       select: {
         id: true,
         title: true,
+        company: true,
+        department: true,
         description: true,
         location: true,
         status: true,
         workMode: true,
         workModeOther: true,
         requiredYearsOfExperience: true,
+        salaryMin: true,
+        salaryMax: true,
+        salaryCurrency: true,
+        closingDate: true,
+        openingsCount: true,
       },
     });
 
@@ -83,22 +98,36 @@ export const PATCH = createRoute(
       where: { id: jobId },
       data: {
         title,
+        company,
+        department,
         description,
         location,
         status: normalizedStatus,
         workMode: normalizedWorkMode,
         workModeOther,
         requiredYearsOfExperience,
+        salaryMin,
+        salaryMax,
+        salaryCurrency,
+        closingDate,
+        openingsCount,
       },
       select: {
         id: true,
         title: true,
+        company: true,
+        department: true,
         description: true,
         location: true,
         status: true,
         workMode: true,
         workModeOther: true,
         requiredYearsOfExperience: true,
+        salaryMin: true,
+        salaryMax: true,
+        salaryCurrency: true,
+        closingDate: true,
+        openingsCount: true,
         createdAt: true,
       },
     });
@@ -118,12 +147,19 @@ export const PATCH = createRoute(
 
     const changedFields: string[] = [];
     if (job.title !== updated.title) changedFields.push("title");
+    if ((job.company ?? null) !== (updated.company ?? null)) changedFields.push("company");
+    if ((job.department ?? null) !== (updated.department ?? null)) changedFields.push("department");
     if ((job.description ?? null) !== (updated.description ?? null)) changedFields.push("description");
     if ((job.location ?? null) !== (updated.location ?? null)) changedFields.push("location");
     if (job.status !== updated.status) changedFields.push("status");
     if ((job.workMode ?? null) !== (updated.workMode ?? null)) changedFields.push("workMode");
     if ((job.workModeOther ?? null) !== (updated.workModeOther ?? null)) changedFields.push("workModeOther");
     if ((job.requiredYearsOfExperience ?? null) !== (updated.requiredYearsOfExperience ?? null)) changedFields.push("requiredYearsOfExperience");
+    if ((job.salaryMin ?? null) !== (updated.salaryMin ?? null)) changedFields.push("salaryMin");
+    if ((job.salaryMax ?? null) !== (updated.salaryMax ?? null)) changedFields.push("salaryMax");
+    if ((job.salaryCurrency ?? null) !== (updated.salaryCurrency ?? null)) changedFields.push("salaryCurrency");
+    if ((job.closingDate?.getTime() ?? null) !== (updated.closingDate?.getTime() ?? null)) changedFields.push("closingDate");
+    if ((job.openingsCount ?? null) !== (updated.openingsCount ?? null)) changedFields.push("openingsCount");
 
     await logJobPageAudit({
       orgId: orgId!,

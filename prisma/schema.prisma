@@ -432,13 +432,20 @@ model Job {
   orgId String
   org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  title                    String
-  description              String?
-  location                 String?
-  status                   JobStatus @default(OPEN)
-  workMode                 WorkMode?
-  workModeOther            String?
+  title                     String
+  company                   String?
+  department                String?
+  description               String?
+  location                  String?
+  status                    JobStatus @default(OPEN)
+  workMode                  WorkMode?
+  workModeOther             String?
   requiredYearsOfExperience Int?
+  salaryMin                 Int?
+  salaryMax                 Int?
+  salaryCurrency            String?
+  closingDate               DateTime?
+  openingsCount             Int?
 
   // Semantic search embedding
   embedding Json?
