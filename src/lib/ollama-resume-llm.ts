@@ -145,7 +145,7 @@ export function isOllamaEnabled(): boolean {
 
 export async function extractWithOllama(
   resumeText: string,
-  timeoutMs = 90000
+  timeoutMs = 45000
 ): Promise<CandidateProfileExtract | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -163,7 +163,7 @@ export async function extractWithOllama(
         ],
         stream: false,
         format: "json",
-        options: { temperature: 0.1, num_ctx: 8192 },
+        options: { temperature: 0.1, num_ctx: 16384 },
       }),
     });
 
@@ -177,7 +177,12 @@ export async function extractWithOllama(
     if (!content) return null;
 
     const rawJson = JSON.parse(content) as OllamaRawExtract;
-    return mapToAppSchema(rawJson);
+    const mapped = mapToAppSchema(rawJson);
+    // Reject hollow extracts — fall through to OpenAI fallback
+    const hasName = Boolean(mapped.personal.fullName?.trim());
+    const hasSubstance = mapped.experiences.length > 0 || mapped.educations.length > 0;
+    if (!hasName || !hasSubstance) return null;
+    return mapped;
   } catch {
     return null;
   } finally {

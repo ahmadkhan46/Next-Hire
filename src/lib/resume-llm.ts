@@ -530,15 +530,19 @@ export async function extractCandidateProfilesBatch(
     "You are an expert resume parser.",
     `You will receive ${items.length} resume(s). Extract structured candidate data from each.`,
     `Return a JSON object with a "resumes" array containing EXACTLY ${items.length} object(s), one per resume in the same order.`,
-    "Each object must have: personal, educations, skillsFlat, technologies, experiences, projects.",
-    "Do not guess. If a field is missing, use null or [].",
-    "Deduplicate skills and technologies.",
-    "Technology category names must be short uppercase labels (e.g. LANGUAGES, FRAMEWORKS, AI/ML, CLOUD & DEVOPS, TOOLS).",
+    "Use EXACTLY these field names — no synonyms:",
+    "personal: { fullName, email, phone, location, currentTitle, yearsOfExperience (int|null), notes (summary text), education: { school, degree, year (int|null) } | null }",
+    "educations: [ { school, degree, location, startYear (int|null), endYear (int|null) } ]",
+    "experiences: [ { company, role, location, start: { year (int), month (1-12) } | null, end: { year (int), month (1-12) } | null, isCurrent (bool), bullets: [string] } ]",
+    "projects: [ { title, dates (string|null), techStack (string|null), link (url|null), bullets: [string] } ]",
+    "technologies: [ { category (e.g. LANGUAGES, FRAMEWORKS, AI/ML, CLOUD & DEVOPS, TOOLS, DATABASES), items: [string] } ]",
+    "skillsFlat: [string] — flat deduplicated list of every skill",
+    "Do not guess. Use null or [] when a field is absent. Deduplicate skills.",
   ].join("\n");
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  // Allow 15 s per resume in the batch, capped at 90 s total
-  const batchTimeoutMs = Math.min(90000, items.length * 15000);
+  // Allow 30 s per resume in the batch, minimum 30 s, capped at 120 s
+  const batchTimeoutMs = Math.min(120000, Math.max(30000, items.length * 30000));
 
   try {
     const responsePromise = openai.chat.completions.create({
